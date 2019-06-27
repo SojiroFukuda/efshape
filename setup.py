@@ -8,6 +8,6 @@ setup(
     author_email='s.fukuda-2018@hull.ac.uk',
     url="https://github.com/SojiroFukuda/FPS-PCA-GUI",
     license='Sojiro FUkuda'
-    install_requires=["numpy", "PyQt5","sys","matplotlib","os","re","glob","pandas","random","pathlib","datatime","cv2","scipy","sklearn"],
+    install_requires=['numpy','PyQt5','matplotlib','os','re','glob','pandas','pathlib','datatime','cv2','scipy','sklearn'],
     packages=find_packages(exclude=('tests', 'docs'))
 )
