@@ -4,7 +4,7 @@ python-based GUI for shape analysis for non-directional particles.
 About
 This is the python-based GUI software for elliptic Fourier and Principal component analysis.
 You can analyze binarized images by this software.
-To open the GUI, please open the startGUIanalyzer.py and build it.
+To open the GUI, please open the fpsanalyzer.py and build it.
 
 NOTE: The following python packages are required in this GUI software
 Python 3.7.3 
