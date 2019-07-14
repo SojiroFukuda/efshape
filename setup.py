@@ -32,7 +32,7 @@ VERSION = '1.1.0'
 
 # What packages are required for this module to be executed?
 REQUIRED = [
-    'PyQt5', 'matplotlib', 'numpy', 'pandas','cv2', 'scipy','sklearn'
+    'PyQt5', 'matplotlib', 'numpy', 'pandas','opencv', 'scipy','sklearn'
 ]
 
 # What packages are optional?
