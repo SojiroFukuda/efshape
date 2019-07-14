@@ -117,9 +117,9 @@ setup(
     # If your package is a single module, use this instead of 'packages':
     # py_modules=['mypackage'],
 
-    # entry_points={
-    #     'console_scripts': ['mycli=mymodule:cli'],
-    # },
+    entry_points={
+        'console_scripts': ['efshapegui=efshapegui:main'],
+    },
     install_requires=REQUIRED,
     extras_require=EXTRAS,
     include_package_data=True,
@@ -137,9 +137,5 @@ setup(
     # $ setup.py publish support.
     cmdclass={
         'upload': UploadCommand,
-    },
-    entry_points={
-	    [console_scripts]
-	    efshapegui = efshapegui:main
     },
 )
