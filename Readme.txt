@@ -2,13 +2,16 @@ python-based GUI for shape analysis for non-directional particles.
 © 2019 Sojiro Fukuda All Rightss Reserved.
 
 About
-This is the python-based GUI software for elliptic Fourier and Principal component analysis.
-You can analyze binarized images by this software.
+This is the python-based GUI software for elliptic Fourier and Principal component analysis based on binarized digital images.
+This software can conduct three type of Elliptic Fourier analysis: i) traditional Elliptic Fourier Analysis, ii) Fourier Power Spectra based analysis (for non-directional dataset such as sedimentary grains), iii) Amplitudes-based Fourier analysis.
+
 To open the GUI, please open the fpsanalyzer.py and build it.
 Free to distribute but without any warranty.
 The paper of this method is still not published (I am trying hard).
 
-NOTE: The following python packages are required in this GUI software
+NOTE: The following python packages are using in this GUI.
+You can setup your python environment by executing setup.py (see below) or using pip tool.
+
 Python 3.7.3 
 pandas ver. 0.24.2
 matplotlib ver. 3.0.3
