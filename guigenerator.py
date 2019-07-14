@@ -385,8 +385,8 @@ class MyForm(Qw.QMainWindow):
         self.ax_rre.set_aspect('equal', 'datalim');
         self.ax_rre.set_xlim([min(x_t),max(x_t)]);
         self.ax_rre.set_ylim([min(y_t),max(y_t)]);
-        pd.DataFrame({"x":x_Na,"y":y_Na}).plot(kind="scatter",x="x", y="y", ax=self.ax_rre,s=0.01,alpha=1);
-        self.ax_rre.fill(x_Na,y_Na,color='black',alpha=0.5);
+        pd.DataFrame({"x":x_Na,"y":y_Na}).plot(kind="scatter",x="x", y="y", ax=self.ax_rre,s=0.01,alpha=1,color="#E8846D");
+        self.ax_rre.fill(x_Na,y_Na,color='#E8846D',alpha=0.5);
         self.ax_rre.set_xlabel("");
         self.ax_rre.set_ylabel("");
         self.ax_rre.set_title(r"${\it N}\ =\ $"+str(self.Nsample))
@@ -397,9 +397,9 @@ class MyForm(Qw.QMainWindow):
         self.ax_rcom.set_xlim([min(x_t),max(x_t)]);
         self.ax_rcom.set_ylim([min(y_t),max(y_t)]);
         
-        pd.DataFrame({"x":x_pa,"y":y_pa}).plot(kind="scatter",x="x", y="y", ax=self.ax_rcom,s=0.01,alpha=0.5);
+        pd.DataFrame({"x":x_pa,"y":y_pa}).plot(kind="scatter",x="x", y="y", ax=self.ax_rcom,s=0.01,alpha=0.5,color='#6DBBE8');
         pd.DataFrame({"x":x_Na,"y":y_Na}).plot(kind="scatter",x="x", y="y", ax=self.ax_rcom,s=1,alpha=1.0,color='red');
-        self.ax_rcom.fill(x_pa,y_pa,color='black',alpha=0.5);
+        self.ax_rcom.fill(x_pa,y_pa,color='#6DBBE8',alpha=0.5);
         self.ax_rcom.set_xlabel("");
         self.ax_rcom.set_ylabel("");
         self.ax_rcom.set_title(r"${\it N}\ =\ $"+str(self.Nsample))
