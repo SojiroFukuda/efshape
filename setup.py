@@ -1,7 +1,7 @@
 
 from distutils.core import setup
 
-setup(name="fps_pca_gui_analyzer",
+setup(name="efpshape",
       version="0.0.1",
       description='package for bulding the GUI software for grain shape analysis based on elliptic Fourier analysis',
       author='Sojiro Fukuda',
