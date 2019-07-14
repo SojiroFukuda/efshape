@@ -138,4 +138,9 @@ setup(
     cmdclass={
         'upload': UploadCommand,
     },
+    entry_points="""
+	    [console_scripts]
+	    efshapegui = efshapegui:main
+	    """,
+	)
 )
