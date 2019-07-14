@@ -118,7 +118,7 @@ setup(
     # py_modules=['mypackage'],
 
     entry_points={
-        'console_scripts': ['efshapegui=efshapegui.efshapeguit:startGUI'],
+        'console_scripts': ['efshapegui=efshapegui.efshapegui:startGUI'],
     },
     install_requires=REQUIRED,
     extras_require=EXTRAS,
