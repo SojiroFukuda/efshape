@@ -13,16 +13,8 @@ import sklearn
 from sklearn.decomposition import PCA
 import random
 import scipy.stats as st
-# print("x=",contours[0][0][0][0])
-# print("y=",contours[0][0][0][1])
 
 print("OpenCV: " + cv2.__version__)
-test = [1,3]
-test2 = [2,4]
-testarray = []
-testarray.append([test,test2])
-
-print(testarray)
 
 #cnt = [ (x0,y0),(x1,y1),......]
 def convShape2func(cnt):
