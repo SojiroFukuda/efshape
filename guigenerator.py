@@ -10,6 +10,7 @@ import numpy as np
 import fpspcam as ef
 import pandas as pd
 import random
+import time
 import fgui as fpsGui                            
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
@@ -25,7 +26,6 @@ print("pandas ver. " + pd.__version__)
 print("matplotlib ver. " + matplotlib.__version__)
 print("numpy ver. " + np.__version__)
 print("PyQt5 ver. " + PYQT_VERSION_STR)
-
 
 # Display pandas dataframe at QTableWidget
 class PandasModel(Qc.QAbstractTableModel): 
@@ -140,7 +140,138 @@ class FourierAnalyzer(QThread):
         self.parent.FPS_PATH = self.parent.SAVE_PATH
         # self.parent.SAVE_PCA = self.parent.SAVE_PATH
         # self.parent.ui.textbox_pcaSave.setText(self.parent.SAVE_PCA)
-        
+# Conduct FPS with an independent thread
+class GraphAnimation(QThread):
+    graphRenew = pyqtSignal(int)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.w = Qw.QDialog(parent)
+        self.parent = parent
+
+    def run(self):
+        # width = max([max(x_pa),max(y_pa)])
+        # x_pap = x_pa/width
+        # y_pap = y_pa/width
+        # self.parent.ax_py.clear()
+        # self.parent.ax_py.set_aspect('equal')
+        im_shape, = self.parent.ax_py.plot([],[])
+        im_px, = self.parent.ax_py.plot([],[])
+        im_dline, = self.parent.ax_py.plot([],[])
+        im_circ_left, = self.parent.ax_py.plot([],[])
+        im_circ_right, = self.parent.ax_py.plot([],[])
+        width = max( [max(self.parent.x_pap),max(self.parent.y_pap) ] )
+        self.parent.ax_py.set_xlim(min([min(self.parent.x_pap),min(self.parent.y_pap)]),width*1.5+max(self.parent.tsample*4))
+        self.parent.ax_py.set_ylim(min([min(self.parent.x_pap),min(self.parent.y_pap)]),width)
+
+        self.parent.ax_px.clear()
+        self.parent.ax_px.set_aspect('equal')
+        im_shape_x, = self.parent.ax_px.plot([],[])
+        im_px_x, = self.parent.ax_px.plot([],[])
+        im_dline_x, = self.parent.ax_px.plot([],[])
+        im_circ_left_x, = self.parent.ax_px.plot([],[])
+        im_circ_right_x, = self.parent.ax_px.plot([],[])
+        self.parent.ax_px.set_xlim(min([min(self.parent.x_pap),min(self.parent.y_pap)]),width*1.5+max(self.parent.tsample*4))
+        self.parent.ax_px.set_ylim(min([min(self.parent.x_pap),min(self.parent.y_pap)]),width)
+        # self.parent.ax_px.clear();
+        # self.parent.ax_py.clear();
+
+        # self.parent.ax_py.set_aspect('equal')
+        # self.parent.ax_px.set_aspect('equal')
+
+        # self.parent.ax_py.set_xlim(min([min(self.parent.x_pap),min(self.parent.y_pap)]),width*1.5+max(self.parent.tsample*4))
+        # self.parent.ax_py.set_ylim(min([min(self.parent.x_pap),min(self.parent.y_pap)]),width)
+        # self.parent.ax_px.set_xlim(min([min(self.parent.x_pap),min(self.parent.y_pap)]),width*1.5+max(self.parent.tsample*4))
+        # self.parent.ax_px.set_ylim(min([min(self.parent.x_pap),min(self.parent.y_pap)]),width)
+        def update_anim_y(frame):
+            t_it = frame%len(self.parent.tsample)
+            y2 = np.copy(self.parent.y_pap[0:t_it])
+            x3 = np.linspace(self.parent.x_pap[t_it],self.parent.tsample[t_it]+width*1.5,100)
+            y3 = np.ones(100)*self.parent.y_pap[t_it]
+            x4 = self.parent.x_pap[t_it]+np.cos(np.linspace(0,2*np.pi,100))/20
+            y4 = self.parent.y_pap[t_it]+np.sin(np.linspace(0,2*np.pi,100))/20
+            x5 = self.parent.tsample[t_it]+width*1.5+np.cos(np.linspace(0,2*np.pi,100))/20
+            y5 = self.parent.y_pap[t_it]+np.sin(np.linspace(0,2*np.pi,100))/20
+            im_shape.set_data(self.parent.x_pap, self.parent.y_pap)
+            im_px.set_data(self.parent.tsample[0:t_it]+width*1.5, y2)
+            im_dline.set_data(x3,y3)
+            im_circ_left.set_data(x4,y4)
+            im_circ_right.set_data(x5,y5)
+
+        def update_anim_x(frame):
+            t_it = frame%len(self.parent.tsample)
+            x1 = self.parent.y_pap
+            y1 = self.parent.x_pap
+            x2 = self.parent.tsample[0:t_it]+width*1.5
+            y2 = np.copy(self.parent.x_pap[0:t_it])
+            x3 = np.linspace(self.parent.y_pap[t_it],self.parent.tsample[t_it]+width*1.5,100)
+            y3 = np.ones(100)*self.parent.x_pap[t_it]
+            x4 = self.parent.y_pap[t_it]+np.cos(np.linspace(0,2*np.pi,100))/20
+            y4 = self.parent.x_pap[t_it]+np.sin(np.linspace(0,2*np.pi,100))/20
+            x5 = self.parent.tsample[t_it]+width*1.5+np.cos(np.linspace(0,2*np.pi,100))/20
+            y5 = self.parent.x_pap[t_it]+np.sin(np.linspace(0,2*np.pi,100))/20
+            im_shape_x.set_data(x1,y1)
+            im_px_x.set_data(x2,y2)
+            im_dline_x.set_data(x3,y3)
+            im_circ_left_x.set_data(x4,y4)
+            im_circ_right_x.set_data(x5,y5)
+            self.graphRenew.emit(0)
+
+        # anim = animation.FuncAnimation(self.parent.figpx, update_anim_x, interval=20, blit=False)
+        # self.parent.ax_px.clear();
+        # self.parent.ax_py.clear();
+
+        self.parent.ax_py.set_aspect('equal')
+        self.parent.ax_px.set_aspect('equal')
+
+        self.parent.ax_py.set_xlim(min([min(self.parent.x_pap),min(self.parent.y_pap)]),width*1.5+max(self.parent.tsample*4))
+        self.parent.ax_py.set_ylim(min([min(self.parent.x_pap),min(self.parent.y_pap)]),width)
+        self.parent.ax_px.set_xlim(min([min(self.parent.x_pap),min(self.parent.y_pap)]),width*1.5+max(self.parent.tsample*4))
+        self.parent.ax_px.set_ylim(min([min(self.parent.x_pap),min(self.parent.y_pap)]),width)
+
+        for i in range(len(self.parent.tsample)):
+            # x
+            t_long = self.parent.tsample*4
+            t_it = i%len(self.parent.tsample)
+            x1 = self.parent.y_pap
+            y1 = self.parent.x_pap
+            x2 = t_long[0:t_it]+width*1.5
+            y2 = np.copy(self.parent.x_pap[0:t_it])
+            x3 = np.linspace(self.parent.y_pap[t_it],t_long[t_it]+width*1.5,100)
+            y3 = np.ones(100)*self.parent.x_pap[t_it]
+            x4 = self.parent.y_pap[t_it]+np.cos(np.linspace(0,2*np.pi,100))/20
+            y4 = self.parent.x_pap[t_it]+np.sin(np.linspace(0,2*np.pi,100))/20
+            x5 = t_long[t_it]+width*1.5+np.cos(np.linspace(0,2*np.pi,100))/20
+            y5 = self.parent.x_pap[t_it]+np.sin(np.linspace(0,2*np.pi,100))/20
+            im_shape_x.set_data(x1,y1)
+            im_px_x.set_data(x2,y2)
+            im_dline_x.set_data(x3,y3)
+            im_circ_left_x.set_data(x4,y4)
+            im_circ_right_x.set_data(x5,y5)
+
+            t_long = self.parent.tsample*4
+            t_it = i%len(self.parent.tsample)
+            x12 = self.parent.x_pap
+            y12 = self.parent.y_pap
+            x22 = t_long[0:t_it]+width*1.5
+            y22 = np.copy(self.parent.y_pap[0:t_it])
+            x32 = np.linspace(self.parent.x_pap[t_it],t_long[t_it]+width*1.5,100)
+            y32 = np.ones(100)*self.parent.y_pap[t_it]
+            x42 = self.parent.x_pap[t_it]+np.cos(np.linspace(0,2*np.pi,100))/20
+            y42 = self.parent.y_pap[t_it]+np.sin(np.linspace(0,2*np.pi,100))/20
+            x52 = t_long[t_it]+width*1.5+np.cos(np.linspace(0,2*np.pi,100))/20
+            y52 = self.parent.y_pap[t_it]+np.sin(np.linspace(0,2*np.pi,100))/20
+            im_shape.set_data(x12,y12)
+            im_px.set_data(x22,y22)
+            im_dline.set_data(x32,y32)
+            im_circ_left.set_data(x42,y42)
+            im_circ_right.set_data(x52,y52)
+            
+            self.graphRenew.emit(i)
+            matplotlib.pyplot.pause(0.01)
+
+
+
 
 ## Main Window #####
 class MyForm(Qw.QMainWindow):               
@@ -235,6 +366,8 @@ class MyForm(Qw.QMainWindow):
         
 
         #-- Playground --------
+        self.ga = GraphAnimation(self)
+        self.ga.graphRenew.connect(self.projection)
         self.isSampleMODE = False
         self.sample_path = ''
         self.layout_ori = Qw.QGridLayout(self.ui.gv_original);
@@ -249,13 +382,34 @@ class MyForm(Qw.QMainWindow):
         self.canvss.setSizePolicy(Qw.QSizePolicy.Expanding, Qw.QSizePolicy.Expanding);
         self.canvss.updateGeometry();
         self.layout_ss.addWidget(self.canvss,0,0);
-        # X, Y, approximation view
+
+        #-- Projection gif -----------------
+        self.layout_px = Qw.QGridLayout(self.ui.f_proj_x);
+        self.figpx = Figure();
+        self.ax_px = self.figpx.add_subplot(111);
+        self.ax_px.tick_params(labelbottom=False,bottom=False);
+        self.ax_px.tick_params(labelleft=False,left=False);
+        self.ax_px.set_xticklabels([]);self.ax_px.set_yticklabels([]);
+        self.canvpx = FigureCanvas(self.figpx);
+        self.canvpx.setSizePolicy(Qw.QSizePolicy.Expanding, Qw.QSizePolicy.Expanding);
+        self.canvpx.updateGeometry();
+        self.layout_px.addWidget(self.canvpx,0,0);
+
+        self.layout_py = Qw.QGridLayout(self.ui.f_proj_y);
+        self.figpy = Figure();
+        self.ax_py = self.figpy.add_subplot(111);
+        self.ax_py.tick_params(labelbottom=False,bottom=False);
+        self.ax_py.tick_params(labelleft=False,left=False);
+        self.ax_py.set_xticklabels([]);self.ax_py.set_yticklabels([]);
+        self.canvpy = FigureCanvas(self.figpy);
+        self.canvpy.setSizePolicy(Qw.QSizePolicy.Expanding, Qw.QSizePolicy.Expanding);
+        self.canvpy.updateGeometry();
+        self.layout_py.addWidget(self.canvpy,0,0);
+
+        #-- X, Y, approximation view -------
         self.layout_x = Qw.QGridLayout(self.ui.f_x_sample);
         self.figx = Figure();
         self.ax_x = self.figx.add_subplot(111);
-        # self.ax_x.tick_params(labelbottom=False,bottom=False);
-        # self.ax_x.tick_params(labelleft=False,left=False);
-        # self.ax_x.set_xticklabels([]);self.ax_x.set_yticklabels([]);
         self.canvx = FigureCanvas(self.figx);
         self.canvx.setSizePolicy(Qw.QSizePolicy.Expanding, Qw.QSizePolicy.Expanding);
         self.canvx.updateGeometry();
@@ -264,9 +418,6 @@ class MyForm(Qw.QMainWindow):
         self.layout_y = Qw.QGridLayout(self.ui.f_y_sample);
         self.figy = Figure();
         self.ax_y = self.figy.add_subplot(111);
-        # self.ax_y.tick_params(labelbottom=False,bottom=False);
-        # self.ax_y.tick_params(labelleft=False,left=False);
-        # self.ax_y.set_xticklabels([]);self.ax_y.set_yticklabels([]);
         self.canvy = FigureCanvas(self.figy);
         self.canvy.setSizePolicy(Qw.QSizePolicy.Expanding, Qw.QSizePolicy.Expanding);
         self.canvy.updateGeometry();
@@ -320,15 +471,33 @@ class MyForm(Qw.QMainWindow):
     def startPlayground(self):
         if self.sample_path == '':
             return
-        self.sample_cnt = self.sample_contours[self.ui.sb_snum_sample.value()-1]
+
+        self.Nsample = self.ui.sb_mh_sample.value() # Maximum Harmonics
+        self.sample_cnt = self.sample_contours[self.ui.sb_snum_sample.value()-1] # choose contour
+        x_t,y_t = ef.adjustXYCoord(ef.getXYCoord(self.sample_cnt)[0],ef.getXYCoord(self.sample_cnt)[1]) # extract contour coordinates
+        self.N_list,x_p,y_p,t = ef.fourierApproximation(self.sample_cnt,self.Nsample) # Reconstructed shape by N harmonics
+        self.x_p_ori = np.copy(x_p) # Original x coordinate
+        self.y_p_ori = np.copy(y_p) # Original y coordinate
+        self.tsample = t
+        t_a,x_Na = ef.adjustXYCoord(t,self.N_list[-1][0])
+        t_a,x_pa = ef.adjustXYCoord(t,x_p)
+        x_Na = -1*x_Na
+        x_pa = -1*x_pa
+        t_a,y_Na = ef.adjustXYCoord(t,self.N_list[-1][1])
+        t_a,y_pa = ef.adjustXYCoord(t,y_p)
+        y_Na = -1*y_Na
+        y_pa = -1*y_pa
+        self.x_pa_ori = x_pa
+        self.y_pa_ori = y_pa
+
         #-- Sample Image view ---------
         pixmap = Qg.QPixmap(self.sample_path)
         self.scene = Qw.QGraphicsScene(self)
         item = Qw.QGraphicsPixmapItem(pixmap)
         self.scene.addItem(item)
         self.ui.gv_original.setScene(self.scene)
-        # self.layout_ori.addWidget(lbl)
-        x_t,y_t = ef.adjustXYCoord(ef.getXYCoord(self.sample_cnt)[0],ef.getXYCoord(self.sample_cnt)[1])
+        
+        
         #-- selected Sample view -------
         self.axss.clear();
         self.axss.set_aspect('equal', 'datalim');
@@ -339,42 +508,30 @@ class MyForm(Qw.QMainWindow):
         self.axss.set_xlabel("");
         self.axss.set_ylabel("");
         self.figss.canvas.draw_idle();
+  
         #-- Fourier Approximation view ---------
-        self.Nsample = self.ui.sb_mh_sample.value()
-        self.N_list,x_p,y_p,t = ef.fourierApproximation(self.sample_cnt,self.Nsample)
-        self.x_p_ori = np.copy(x_p)
-        self.y_p_ori = np.copy(y_p)
         matplotlib.pyplot.close()
         self.ax_x.clear();
         # self.ax_x.set_aspect('equal', 'datalim');
-       
-        t_a,x_Na = ef.adjustXYCoord(t,self.N_list[-1][0])
-        t_a,x_pa = ef.adjustXYCoord(t,x_p)
-        x_Na = -1*x_Na
-        x_pa = -1*x_pa
         self.ax_x.set_xlim([min(t),max(t)]);
         self.ax_x.set_ylim([min(x_pa),max(x_pa)]);
         pd.DataFrame({"x":t,"y":x_Na}).plot(kind="scatter",x="x", y="y", ax=self.ax_x,color='red',s=1.0,alpha=0.5);
         pd.DataFrame({"x":t,"y":x_pa}).plot(kind="scatter",x="x", y="y", ax=self.ax_x,color='black',s=0.5,alpha=1);
-    
+        # label, title
         self.ax_x.set_xlabel("");
         self.ax_x.set_ylabel("");
         self.ax_x.set_title(r"${\it N}\ =\ $"+str(self.Nsample))
+        # Draw
         self.figx.canvas.draw_idle();
-
+        
         matplotlib.pyplot.close()
         self.ax_y.clear();
         # self.ax_y.set_aspect('equal', 'datalim');
-       
-        t_a,y_Na = ef.adjustXYCoord(t,self.N_list[-1][1])
-        y_Na = -1*y_Na
-        t_a,y_pa = ef.adjustXYCoord(t,y_p)
-        y_pa = -1*y_pa
         self.ax_y.set_xlim([min(t),max(t)]);
         self.ax_y.set_ylim([min(y_pa),max(y_pa)]);
         pd.DataFrame({"x":t,"y":y_Na}).plot(kind="scatter",x="x", y="y", ax=self.ax_y,color='red',s=1.0,alpha=0.5);
         pd.DataFrame({"x":t,"y":y_pa}).plot(kind="scatter",x="x", y="y", ax=self.ax_y,color='black',s=0.5,alpha=1);
-    
+        # label title
         self.ax_y.set_xlabel("");
         self.ax_y.set_ylabel("");
         self.ax_y.set_title(r"${\it N}\ =\ $"+str(self.Nsample))
@@ -405,9 +562,63 @@ class MyForm(Qw.QMainWindow):
         self.ax_rcom.set_title(r"${\it N}\ =\ $"+str(self.Nsample))
         self.fig_rcom.canvas.draw_idle();
         self.isSampleMODE = True
+        #-- Projection view --------------------
+        self.width = max([max(x_pa),max(y_pa)])
+        self.x_pap = x_pa/self.width
+        self.y_pap = y_pa/self.width
 
-        self.x_pa_ori = x_pa
-        self.y_pa_ori = y_pa
+        # self.ax_py.clear()
+        # self.ax_py.set_aspect('equal','datalim')
+        # im_shape, = self.ax_py.plot([],[])
+        # im_px, = self.ax_py.plot([],[])
+        # im_dline, = self.ax_py.plot([],[])
+        # im_circ_left, = self.ax_py.plot([],[])
+        # im_circ_right, = self.ax_py.plot([],[])
+        # self.ax_py.set_xlim(min([min(x_pap),min(y_pap)]),width*1.5+max(t*4))
+        # self.ax_py.set_ylim(min([min(x_pap),min(y_pap)]),width)
+        # def update_anim_y(frame):
+        #     t_it = frame%len(t)
+        #     print("Hiy")
+        #     y2 = np.copy(y_pap[0:t_it])
+        #     x3 = np.linspace(x_pap[t_it],t[t_it]+width*1.5,100)
+        #     y3 = np.ones(100)*y_pap[t_it]
+        #     x4 = x_pap[t_it]+np.cos(np.linspace(0,2*np.pi,100))/20
+        #     y4 = y_pap[t_it]+np.sin(np.linspace(0,2*np.pi,100))/20
+        #     x5 = t[t_it]+width*1.5+np.cos(np.linspace(0,2*np.pi,100))/20
+        #     y5 = y_pap[t_it]+np.sin(np.linspace(0,2*np.pi,100))/20
+        #     im_shape.set_data(x_pap, y_pap)
+        #     im_px.set_data(t[0:t_it]+width*1.5, y2)
+        #     im_dline.set_data(x3,y3)
+        #     im_circ_left.set_data(x4,y4)
+        #     im_circ_right.set_data(x5,y5)
+
+        # def update_anim_x(frame):
+        #     t_it = frame%len(t)
+        #     print("Hix")
+        #     y2 = np.copy(x_pap[0:t_it])
+        #     x3 = np.linspace(y_pap[t_it],t[t_it]+width*1.5,100)
+        #     y3 = np.ones(100)*x_pap[t_it]
+        #     x4 = y_pap[t_it]+np.cos(np.linspace(0,2*np.pi,100))/20
+        #     y4 = x_pap[t_it]+np.sin(np.linspace(0,2*np.pi,100))/20
+        #     x5 = t[t_it]+width*1.5+np.cos(np.linspace(0,2*np.pi,100))/20
+        #     y5 = x_pap[t_it]+np.sin(np.linspace(0,2*np.pi,100))/20
+        #     im_shape.set_data(y_pap, x_pap)
+        #     im_px.set_data(t_a[0:t_it]+width*1.5, y2)
+        #     im_dline.set_data(x3,y3)
+        #     im_circ_left.set_data(x4,y4)
+        #     im_circ_right.set_data(x5,y5)
+        self.ga.start()
+        # anim = animation.FuncAnimation(self.figpx, update_anim_x, interval=20, blit=True)
+        # # animation.TimedAnimation.__init__(self.figpx.canvas,self.figpx,interval=20,blit=False)
+        # anim = animation.FuncAnimation(self.figpy, update_anim_y, interval=20, blit=False)
+        
+        # self.figpx.canvas.draw_idle();
+        # self.figpy.canvas.draw_idle(); 
+    def projection(self,frame):
+        
+        self.figpx.canvas.draw_idle();
+        self.figpy.canvas.draw_idle(); 
+        
 
         
 
