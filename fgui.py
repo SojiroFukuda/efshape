@@ -2,11 +2,13 @@
 
 # Form implementation generated from reading ui file 'GrainAnalyzer.ui'
 #
-# Created by: PyQt5 UI code generator 5.9.2
+# Created by: PyQt5 UI code generator 5.13.0
 #
 # WARNING! All changes made in this file will be lost!
 
+
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -72,6 +74,21 @@ class Ui_MainWindow(object):
         self.gv_original.setObjectName("gv_original")
         self.gridLayout_17.addWidget(self.gv_original, 1, 0, 1, 1)
         self.tabWidget_2.addTab(self.tab_6, "")
+        self.tab_9 = QtWidgets.QWidget()
+        self.tab_9.setObjectName("tab_9")
+        self.verticalLayout = QtWidgets.QVBoxLayout(self.tab_9)
+        self.verticalLayout.setObjectName("verticalLayout")
+        self.f_proj_y = QtWidgets.QFrame(self.tab_9)
+        self.f_proj_y.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.f_proj_y.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.f_proj_y.setObjectName("f_proj_y")
+        self.verticalLayout.addWidget(self.f_proj_y)
+        self.f_proj_x = QtWidgets.QFrame(self.tab_9)
+        self.f_proj_x.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.f_proj_x.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.f_proj_x.setObjectName("f_proj_x")
+        self.verticalLayout.addWidget(self.f_proj_x)
+        self.tabWidget_2.addTab(self.tab_9, "")
         self.tab_7 = QtWidgets.QWidget()
         self.tab_7.setObjectName("tab_7")
         self.gridLayout_18 = QtWidgets.QGridLayout(self.tab_7)
@@ -827,7 +844,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
         self.tabWidget.setCurrentIndex(0)
-        self.tabWidget_2.setCurrentIndex(0)
+        self.tabWidget_2.setCurrentIndex(1)
         self.tab_pca.setCurrentIndex(0)
         self.cmb_format.currentIndexChanged['QString'].connect(MainWindow.setFormat)
         self.button_folda.clicked.connect(MainWindow.setFoldaPath)
@@ -881,6 +898,7 @@ class Ui_MainWindow(object):
         self.label_37.setText(_translate("MainWindow", "Selected Sample"))
         self.label_35.setText(_translate("MainWindow", "Selected Image"))
         self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.tab_6), _translate("MainWindow", "Original"))
+        self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.tab_9), _translate("MainWindow", "Projection"))
         self.label_41.setText(_translate("MainWindow", "Y Coordinate"))
         self.label_40.setText(_translate("MainWindow", "X Coordinate"))
         self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.tab_7), _translate("MainWindow", "Fourier Approximation"))
@@ -1062,4 +1080,3 @@ class Ui_MainWindow(object):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_3), _translate("MainWindow", "Shape"))
         self.menutest.setTitle(_translate("MainWindow", "File"))
         self.actionAbout.setText(_translate("MainWindow", "About"))
-
