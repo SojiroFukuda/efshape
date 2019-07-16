@@ -561,8 +561,10 @@ class MyForm(Qw.QMainWindow):
         for i in range(self.Nsample):
             num = str(i+1)
             x_Na,y_Na = ef.adjustXYCoord(self.N_list[i][0],self.N_list[i][1])
-            shifx = np.abs(max(self.x_pa_ori)-min(self.x_pa_ori))*1.5
+            shifx = np.abs(max(self.x_pa_ori)-min(self.x_pa_ori))*1.2
             fig,ax_seq= matplotlib.pyplot.subplots()
+            ax_seq.set_xlim(min(self.x_pa_ori)*1.1,max(self.x_pa_ori)*1.1+shifx)
+            ax_seq.set_ylim(min(self.y_pa_ori)*1.1,max(self.y_pa_ori)*1.1)
             ax_seq.set_aspect('equal', 'datalim');
             ax_seq.plot(x_Na,-y_Na,linewidth=0.1,color='#E8846D',alpha=1)
             ax_seq.fill(x_Na,-y_Na,color='#E8846D',alpha=1)
