@@ -154,14 +154,14 @@ class GraphAnimation(QThread):
         # plot for y-projection
         im_shape, = self.parent.ax_py.plot([],[],color='blue') # original sample
         im_px, = self.parent.ax_py.plot([],[],color='orange') # projected function of x coordinate
-        im_dline, = self.parent.ax_py.plot([],[],linestyle='dashed',alpha=0.5) # a line 
+        im_dline, = self.parent.ax_py.plot([],[],linestyle='dashed',color="#E8846D",alpha=0.5) # a line 
         im_circ_left, = self.parent.ax_py.plot([],[],color='red') # moving point along the contour
         im_circ_right, = self.parent.ax_py.plot([],[],color='red') # moving point along the function curve
         
         # plot for x-projection
         im_shape_x, = self.parent.ax_px.plot([],[],color='blue')
         im_px_x, = self.parent.ax_px.plot([],[],color='orange')
-        im_dline_x, = self.parent.ax_px.plot([],[],linestyle='dashed',alpha=0.5)
+        im_dline_x, = self.parent.ax_px.plot([],[],linestyle='dashed',color="#E8846D",alpha=0.5)
         im_circ_left_x, = self.parent.ax_px.plot([],[],color='red')
         im_circ_right_x, = self.parent.ax_px.plot([],[],color='red')
 
@@ -179,21 +179,24 @@ class GraphAnimation(QThread):
         self.parent.ax_py.plot(np.zeros(50)+width*1.5,np.linspace(-1*width,width,50),color='black')
         self.parent.ax_px.plot(np.zeros(50)+width*1.5,np.linspace(-1*width,width,50),color='black')
 
+        self.parent.ax_py.fill(self.parent.x_pap,self.parent.y_pap,color='#6DBBE8')
+        self.parent.ax_px.fill(self.parent.y_pap*-1,self.parent.x_pap,color='#6DBBE8')
+
         for i in range(len(self.parent.tsample)):
             # x
             t_long = self.parent.tsample*4
             t_it = i%len(self.parent.tsample)
-            x1 = self.parent.y_pap
+            x1 = self.parent.y_pap*-1
             y1 = self.parent.x_pap
             x2 = t_long[0:t_it]+width*1.5
             y2 = np.copy(self.parent.x_pap[0:t_it])
-            x3 = np.linspace(self.parent.y_pap[t_it],t_long[t_it]+width*1.5,100)
+            x3 = np.linspace(self.parent.y_pap[t_it]*-1,t_long[t_it]+width*1.5,100)
             y3 = np.ones(100)*self.parent.x_pap[t_it]
-            x4 = self.parent.y_pap[t_it]+np.cos(np.linspace(0,2*np.pi,100))/20
+            x4 = self.parent.y_pap[t_it]*(-1)+np.cos(np.linspace(0,2*np.pi,100))/20
             y4 = self.parent.x_pap[t_it]+np.sin(np.linspace(0,2*np.pi,100))/20
             x5 = t_long[t_it]+width*1.5+np.cos(np.linspace(0,2*np.pi,100))/20
             y5 = self.parent.x_pap[t_it]+np.sin(np.linspace(0,2*np.pi,100))/20
-            im_shape_x.set_data(x1,y1)
+            # im_shape_x.set_data(x1,y1)
             im_px_x.set_data(x2,y2)
             im_dline_x.set_data(x3,y3)
             im_circ_left_x.set_data(x4,y4)
@@ -211,7 +214,7 @@ class GraphAnimation(QThread):
             y42 = self.parent.y_pap[t_it]+np.sin(np.linspace(0,2*np.pi,100))/20
             x52 = t_long[t_it]+width*1.5+np.cos(np.linspace(0,2*np.pi,100))/20
             y52 = self.parent.y_pap[t_it]+np.sin(np.linspace(0,2*np.pi,100))/20
-            im_shape.set_data(x12,y12)
+            # im_shape.set_data(x12,y12)
             im_px.set_data(x22,y22)
             im_dline.set_data(x32,y32)
             im_circ_left.set_data(x42,y42)
@@ -325,6 +328,7 @@ class MyForm(Qw.QMainWindow):
         # selected sample
         self.layout_ss = Qw.QGridLayout(self.ui.f_selected);
         self.figss = Figure();
+        self.figss.subplots_adjust(left=0,right=1,bottom=0,top=1)
         self.axss = self.figss.add_subplot(111);
         self.axss.tick_params(labelbottom=False,bottom=False);
         self.axss.tick_params(labelleft=False,left=False);
@@ -379,9 +383,12 @@ class MyForm(Qw.QMainWindow):
         #-- Reconst -----
         self.layout_rre = Qw.QGridLayout(self.ui.f_r_recon);
         self.fig_rre = Figure();
+        self.fig_rre.subplots_adjust(left=0,right=1,bottom=0)
+        self.fig_rre.patch.set_visible(False)
         self.ax_rre = self.fig_rre.add_subplot(111);
         self.ax_rre.tick_params(labelbottom=False,bottom=False);
         self.ax_rre.tick_params(labelleft=False,left=False);
+        self.ax_rre.axis('off')
         self.ax_rre.set_xticklabels([]);self.ax_rre.set_yticklabels([]);
         self.canv_rre = FigureCanvas(self.fig_rre);
         self.canv_rre.setSizePolicy(Qw.QSizePolicy.Expanding, Qw.QSizePolicy.Expanding);
@@ -390,9 +397,12 @@ class MyForm(Qw.QMainWindow):
 
         self.layout_rcom = Qw.QGridLayout(self.ui.f_r_comp);
         self.fig_rcom = Figure();
+        self.fig_rcom.subplots_adjust(left=0,right=1,bottom=0)
+        self.fig_rcom.patch.set_visible(False)
         self.ax_rcom = self.fig_rcom.add_subplot(111);
         self.ax_rcom.tick_params(labelbottom=False,bottom=False);
         self.ax_rcom.tick_params(labelleft=False,left=False);
+        self.ax_rcom.axis('off')
         self.ax_rcom.set_xticklabels([]);self.ax_rcom.set_yticklabels([]);
         self.canv_rcom = FigureCanvas(self.fig_rcom);
         self.canv_rcom.setSizePolicy(Qw.QSizePolicy.Expanding, Qw.QSizePolicy.Expanding);
@@ -473,7 +483,7 @@ class MyForm(Qw.QMainWindow):
         # label, title
         self.ax_x.set_xlabel("");
         self.ax_x.set_ylabel("");
-        self.ax_x.set_title(r"${\it N}\ =\ $"+str(self.Nsample))
+        self.ax_x.set_title(r"Maximum Harmonics: ${\it N}\ =\ $"+str(self.Nsample))
         # Draw
         self.figx.canvas.draw_idle();
         
@@ -487,7 +497,7 @@ class MyForm(Qw.QMainWindow):
         # label title
         self.ax_y.set_xlabel("");
         self.ax_y.set_ylabel("");
-        self.ax_y.set_title(r"${\it N}\ =\ $"+str(self.Nsample))
+        self.ax_y.set_title(r"Maximum Harmonics: ${\it N}\ =\ $"+str(self.Nsample))
         self.figy.canvas.draw_idle();
 
         #-- Reconstruct view ----------
@@ -499,7 +509,8 @@ class MyForm(Qw.QMainWindow):
         self.ax_rre.fill(x_Na,y_Na,color='#E8846D',alpha=0.5);
         self.ax_rre.set_xlabel("");
         self.ax_rre.set_ylabel("");
-        self.ax_rre.set_title(r"${\it N}\ =\ $"+str(self.Nsample))
+        self.ax_rre.set_title(r"Maximum Harmonics: ${\it N}\ =\ $"+str(self.Nsample))
+        self.ax_rre.axis('off')
         self.fig_rre.canvas.draw_idle();
 
         self.ax_rcom.clear();
@@ -512,7 +523,8 @@ class MyForm(Qw.QMainWindow):
         self.ax_rcom.fill(x_pa,y_pa,color='#6DBBE8',alpha=0.5);
         self.ax_rcom.set_xlabel("");
         self.ax_rcom.set_ylabel("");
-        self.ax_rcom.set_title(r"${\it N}\ =\ $"+str(self.Nsample))
+        self.ax_rcom.set_title(r"Maximum Harmonics: ${\it N}\ =\ $"+str(self.Nsample))
+        self.ax_rcom.axis('off')
         self.fig_rcom.canvas.draw_idle();
         self.isSampleMODE = True
 
