@@ -408,6 +408,7 @@ class MyForm(Qw.QMainWindow):
         self.canv_rcom.setSizePolicy(Qw.QSizePolicy.Expanding, Qw.QSizePolicy.Expanding);
         self.canv_rcom.updateGeometry();
         self.layout_rcom.addWidget(self.canv_rcom,0,0);
+        self.ui.tabWidget_2.setCurrentIndex() = 1
 
 
     def setSampleImage(self):
