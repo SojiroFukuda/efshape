@@ -510,7 +510,7 @@ class Ui_MainWindow(object):
         self.scrollArea.setWidgetResizable(True)
         self.scrollArea.setObjectName("scrollArea")
         self.scrollAreaWidgetContents = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 259, 815))
+        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 298, 815))
         self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
         self.gridLayout_5 = QtWidgets.QGridLayout(self.scrollAreaWidgetContents)
         self.gridLayout_5.setObjectName("gridLayout_5")
@@ -870,7 +870,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
         self.tabWidget.setCurrentIndex(0)
-        self.tabWidget_2.setCurrentIndex(2)
+        self.tabWidget_2.setCurrentIndex(1)
         self.tab_pca.setCurrentIndex(0)
         self.cmb_format.currentIndexChanged['QString'].connect(MainWindow.setFormat)
         self.button_folda.clicked.connect(MainWindow.setFoldaPath)
