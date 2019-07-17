@@ -388,7 +388,7 @@ class MyForm(Qw.QMainWindow):
         self.ax_rre = self.fig_rre.add_subplot(111);
         self.ax_rre.tick_params(labelbottom=False,bottom=False);
         self.ax_rre.tick_params(labelleft=False,left=False);
-        self.ax_rre.axis('off')
+        # self.ax_rre.axis('off')
         self.ax_rre.set_xticklabels([]);self.ax_rre.set_yticklabels([]);
         self.canv_rre = FigureCanvas(self.fig_rre);
         self.canv_rre.setSizePolicy(Qw.QSizePolicy.Expanding, Qw.QSizePolicy.Expanding);
@@ -402,7 +402,7 @@ class MyForm(Qw.QMainWindow):
         self.ax_rcom = self.fig_rcom.add_subplot(111);
         self.ax_rcom.tick_params(labelbottom=False,bottom=False);
         self.ax_rcom.tick_params(labelleft=False,left=False);
-        self.ax_rcom.axis('off')
+        # self.ax_rcom.axis('off')
         self.ax_rcom.set_xticklabels([]);self.ax_rcom.set_yticklabels([]);
         self.canv_rcom = FigureCanvas(self.fig_rcom);
         self.canv_rcom.setSizePolicy(Qw.QSizePolicy.Expanding, Qw.QSizePolicy.Expanding);
@@ -504,27 +504,34 @@ class MyForm(Qw.QMainWindow):
         self.ax_rre.clear();
         self.ax_rre.set_aspect('equal', 'datalim');
         self.ax_rre.set_xlim([min(x_t),max(x_t)]);
-        self.ax_rre.set_ylim([min(y_t),max(y_t)]);
+        self.ax_rre.set_ylim([min(y_t),max(y_t)*1.3]);
         pd.DataFrame({"x":x_Na,"y":y_Na}).plot(kind="scatter",x="x", y="y", ax=self.ax_rre,s=0.01,alpha=1,color="#E8846D");
         self.ax_rre.fill(x_Na,y_Na,color='#E8846D',alpha=0.5);
         self.ax_rre.set_xlabel("");
         self.ax_rre.set_ylabel("");
-        self.ax_rre.set_title(r"Maximum Harmonics: ${\it N}\ =\ $"+str(self.Nsample))
-        self.ax_rre.axis('off')
+        # self.ax_rre.set_title(r"Maximum Harmonics: ${\it N}\ =\ $"+str(self.Nsample))
+        self.ax_rre.spines['top'].set_color('white')
+        self.ax_rre.spines['bottom'].set_color('white')
+        self.ax_rre.spines['left'].set_color('white')
+        self.ax_rre.spines['right'].set_color('white')
+        self.ax_rre.text(.5,.9,r"Maximum Harmonics: ${\it N}\ =\ $"+str(self.Nsample),horizontalalignment='center',transform=self.ax_rre.transAxes)
         self.fig_rre.canvas.draw_idle();
 
         self.ax_rcom.clear();
         self.ax_rcom.set_aspect('equal', 'datalim');
         self.ax_rcom.set_xlim([min(x_t),max(x_t)]);
-        self.ax_rcom.set_ylim([min(y_t),max(y_t)]);
-        
+        self.ax_rcom.set_ylim([min(y_t),max(y_t)*1.3]);
         pd.DataFrame({"x":x_pa,"y":y_pa}).plot(kind="scatter",x="x", y="y", ax=self.ax_rcom,s=0.01,alpha=0.5,color='#6DBBE8');
         pd.DataFrame({"x":x_Na,"y":y_Na}).plot(kind="scatter",x="x", y="y", ax=self.ax_rcom,s=1,alpha=1.0,color='red');
         self.ax_rcom.fill(x_pa,y_pa,color='#6DBBE8',alpha=0.5);
         self.ax_rcom.set_xlabel("");
         self.ax_rcom.set_ylabel("");
-        self.ax_rcom.set_title(r"Maximum Harmonics: ${\it N}\ =\ $"+str(self.Nsample))
-        self.ax_rcom.axis('off')
+        # self.ax_rcom.set_title(r"Maximum Harmonics: ${\it N}\ =\ $"+str(self.Nsample))
+        self.ax_rcom.spines['top'].set_color('white')
+        self.ax_rcom.spines['bottom'].set_color('white')
+        self.ax_rcom.spines['left'].set_color('white')
+        self.ax_rcom.spines['right'].set_color('white')
+        self.ax_rcom.text(.5,.9,r"Maximum Harmonics: ${\it N}\ =\ $"+str(self.Nsample),horizontalalignment='center',transform=self.ax_rre.transAxes)
         self.fig_rcom.canvas.draw_idle();
         self.isSampleMODE = True
 
