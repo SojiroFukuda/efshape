@@ -182,6 +182,8 @@ class GraphAnimation(QThread):
         self.parent.ax_py.fill(self.parent.x_pap,self.parent.y_pap,color='#6DBBE8')
         self.parent.ax_px.fill(self.parent.y_pap*-1,self.parent.x_pap,color='#6DBBE8')
 
+        self.parent.ax_py.text(.41,.9,r"$Y$",horizontalalignment='center',transform=self.parent.ax_py.transAxes)
+        self.parent.ax_px.text(.41,.9,r"$X$",horizontalalignment='center',transform=self.parent.ax_py.transAxes)
         for i in range(len(self.parent.tsample)):
             # x
             t_long = self.parent.tsample*4
