@@ -572,8 +572,14 @@ class MyForm(Qw.QMainWindow):
         self.figss.savefig(file_name+"Selected_Sample.pdf",bbox_inches='tight')
         self.figx.savefig(file_name+"X_coord.pdf",bbox_inches='tight')
         self.figy.savefig(file_name+"y_coord.pdf",bbox_inches='tight')
-        self.fig_rre.savefig(file_name+"Reconst.pdf",bbox_inches='tight')
-        self.fig_rcom.savefig(file_name+"Comperison.pdf",bbox_inches='tight')
+        self.fig_rre.savefig(file_name+"Reconst.pdf")
+        self.fig_rcom.savefig(file_name+"Comperison.pdf")
+        try:
+            self.figpx.savefig(file_name+"projection_X.pdf",bbox_inches='tight')
+            self.figpy.savefig(file_name+"projection_Y.pdf",bbox_inches='tight')
+        except:
+            print('Warosu')
+            pass
         os.makedirs(FIG_FOLDA+os.sep+"Sample_Set"+os.sep+"sequence",exist_ok=True)
         os.makedirs(FIG_FOLDA+os.sep+"Sample_Set"+os.sep+"sequence"+os.sep+"comp",exist_ok=True)
         sequence_name = FIG_FOLDA+os.sep+"Sample_Set"+os.sep+"sequence"+os.sep
@@ -595,7 +601,7 @@ class MyForm(Qw.QMainWindow):
             x_sNa = np.copy(x_Na+shifx)
             ax_seq.fill(self.x_pa_ori+shifx,self.y_pa_ori,color='#6DBBE8',alpha=1)
             ax_seq.set_title(r"${\it N}\ =\ $"+num)
-            fig.savefig(sequence_name+"comp"+os.sep+"seq_"+num+"_c.png")
+            fig.savefig(sequence_name+"comp"+os.sep+"seq_"+num+"_c.pdf")
             matplotlib.pyplot.close()
             num = str(i+1)
             fig,ax_seq= matplotlib.pyplot.subplots()
@@ -603,7 +609,7 @@ class MyForm(Qw.QMainWindow):
             ax_seq.plot(self.N_list[i][0],self.N_list[i][1],linewidth=0.1,color='black')
             ax_seq.fill(self.N_list[i][0],self.N_list[i][1],color='black',alpha=0.5)
             ax_seq.set_title(r"${\it N}\ =\ $"+num)
-            fig.savefig(sequence_name+"seq_"+num+".png")
+            fig.savefig(sequence_name+"seq_"+num+".pdf")
             matplotlib.pyplot.close()
             # figc,bx_seq= matplotlib.pyplot.subplots()
             # bx_seq.set_aspect('equal', 'datalim');
@@ -1083,6 +1089,8 @@ class MyForm(Qw.QMainWindow):
         File_log_str += "You can also draw a simple graph of each parameters including PC scores at graph tab. " +"\n"
         self.onStringChangedPCA(File_log_str)
         #-----------------
+        self.ui.logbox_pca.update()
+        self.ui.frame_graph.update()
 
     def setXaxis(self):
         cmb_loc = self.FPS_PCA.columns.get_loc('pixel')
@@ -1178,7 +1186,7 @@ class MyForm(Qw.QMainWindow):
 
     def graphDraw(self):
         #- plot initial setting -------------------------------------
-        colors=["b", "r", "g", "g", "k", "c"]
+        colors=["#005AFF", "#FF4B00","#03AF7A", "#804000", "#990099", "#FF8082", "#4DC4FF", "#F6AA00", "#FFF100"]
         marker_list = [  "o", ",", "^", "v", "*", "<", ">", "1", ".", "2", "3","4", "8", "s", "p", "h", "H", "+", "x", "D","d", "|", "_", "None", None, "", "$x$","$\\alpha$", "$\\beta$", "$\\gamma$"]
         cmap_list = ["winter","autumn","summer","spring","pink","Wistia"]
         alpha = self.ui.dsb_alpha.value()
