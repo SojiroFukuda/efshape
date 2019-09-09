@@ -5,7 +5,7 @@ About
 This is the python-based GUI software for elliptic Fourier and Principal component analysis based on binarized digital images.
 This software can conduct three type of Elliptic Fourier analysis: i) traditional Elliptic Fourier Analysis, ii) Fourier Power Spectra based analysis (for non-directional dataset such as sedimentary grains), iii) Amplitudes-based Fourier analysis.
 
-To open the GUI, please open the fpsanalyzer.py and build it.
+To open the GUI, please open the efashapegui.py and build it.
 Free to distribute but without any warranty.
 The paper of this method is still not published (I am trying hard).
 
