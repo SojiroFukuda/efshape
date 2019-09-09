@@ -64,25 +64,39 @@ def fourierApproximation(cnt,N):
     t = np.arange(0,T,delt)
     x_r = np.zeros(len(t)) #X-coordinate of reconstructed shape from EFDs
     y_r = np.zeros(len(t)) #Y-coordinate of reconstructed shape from EFDs
+    xf_r = np.zeros(len(t)) #X-coordinate of reconstructed shape from EFDs
+    yf_r = np.zeros(len(t)) #Y-coordinate of reconstructed shape from EFDs
     # cnt = np.append(cn)
     # cnt = np.concatenate( (cnt,[cnt[0]]) )
     # dt, cum = convShape2func(cnt)
 
     x,y = adjustXYCoord(getXYCoord(cnt)[0],getXYCoord(cnt)[1])
+    xf,yf = adjustXYCoord(getXYCoord(cnt)[0]*(-1),getXYCoord(cnt)[1])
     # x,y = getXYCoord(cnt)
     dt = np.zeros( len( x ) - 1 ) # length along the countour between each coordinate.
     cum = np.zeros( len( x ) ) # cumlative length of dt.
+    dtf = np.zeros( len( xf ) - 1 ) # length along the countour between each coordinate.
+    cumf = np.zeros( len( xf ) ) # cumlative length of dt.
     cum[0] = 0
+    cumf[0] = 0
     for i in range(len( x ) - 1):
         dt[i] = np.sqrt( (x[i+1]-x[i])*(x[i+1]-x[i]) + (y[i+1]-y[i])*(y[i+1]-y[i]) )
         cum[i+1] = cum[i] + dt[i]
+        dtf[i] = np.sqrt( (xf[i+1]-xf[i])*(xf[i+1]-xf[i]) + (yf[i+1]-yf[i])*(yf[i+1]-yf[i]) )
+        cumf[i+1] = cumf[i] + dtf[i]
     #create func 
     inter_func_X = interp1d(cum/cum[-1],x,kind='linear')
     inter_func_Y = interp1d(cum/cum[-1],y,kind='linear')
+    inter_func_Xf = interp1d(cumf/cumf[-1],xf,kind='linear')
+    inter_func_Yf = interp1d(cumf/cumf[-1],yf,kind='linear')
     # align the coordinates evenly along the contour
     x_p = inter_func_X(t)
     y_p = inter_func_Y(t)
+    xf_p = inter_func_Xf(t)
+    yf_p = inter_func_Yf(t)
     N_list = []
+    harmonics = []
+    harmonicsf = []
     for i in range(N):
         #calculate EFDs
         an, bn, cn, dn = efd(T,x_p,y_p,t,delt,i+1)
@@ -90,8 +104,19 @@ def fourierApproximation(cnt,N):
         #Reconstruction
         x_r += an*np.cos(2*(i+1)*np.pi*t/T) + bn*np.sin(2*(i+1)*np.pi*t/T)
         y_r += cn*np.cos(2*(i+1)*np.pi*t/T) + dn*np.sin(2*(i+1)*np.pi*t/T)
+        harmonics.append( [an*np.cos(2*(i+1)*np.pi*t/T) + bn*np.sin(2*(i+1)*np.pi*t/T),cn*np.cos(2*(i+1)*np.pi*t/T) + dn*np.sin(2*(i+1)*np.pi*t/T) ] )
         N_list.append([np.copy(x_r),np.copy(y_r)])
-    return N_list,x_p,y_p,t
+
+        #calculate EFDs
+        anf, bnf, cnf, dnf = efd(T,xf_p,yf_p,t,delt,i+1)
+        # efd_list.append(np.array([anf,bnf,cnf,dnf]))
+        #Reconstruction
+        xf_r += anf*np.cos(2*(i+1)*np.pi*t/T) + bnf*np.sin(2*(i+1)*np.pi*t/T)
+        yf_r += cnf*np.cos(2*(i+1)*np.pi*t/T) + dnf*np.sin(2*(i+1)*np.pi*t/T)
+        harmonicsf.append( [anf*np.cos(2*(i+1)*np.pi*t/T) + bnf*np.sin(2*(i+1)*np.pi*t/T),cnf*np.cos(2*(i+1)*np.pi*t/T) + dnf*np.sin(2*(i+1)*np.pi*t/T) ] )
+        # N_list.append([np.copy(x_r),np.copy(y_r)])
+
+    return N_list,harmonics,harmonicsf,x_p,y_p,t
 
 #function that returns the traditional EFDs
 def efd(T,x_p,y_p,t_p,dt,n):
@@ -253,6 +278,7 @@ def FPS_calc(im_path,isSaveAll,save_dir,file,grouplist,HEADER,BGC,delt,N,MIN,SCA
         os.makedirs(save_dir+os.sep+"NormalizedDATASET",exist_ok=True)
         os.makedirs(save_dir+os.sep+"NormalizedDATASET_X",exist_ok=True)
         os.makedirs(save_dir+os.sep+"NormalizedDATASET_Y",exist_ok=True)
+        os.makedirs(save_dir+os.sep+"NormalizedDATASET_EH",exist_ok=True)
     for i,cnt in enumerate(contours):
         #Area, Perimeter
         FPS_matrix[i][INDEX_PIXEL] = cv2.contourArea(cnt) #Pixel Area
@@ -350,7 +376,7 @@ def FPS_calc(im_path,isSaveAll,save_dir,file,grouplist,HEADER,BGC,delt,N,MIN,SCA
         psi_mat = np.array([[np.cos(psi_1),np.sin(psi_1)],[-1*np.sin(psi_1),np.cos(psi_1)]])
         x_star = np.zeros(len(t)) #X-coordinate of reconstructed shape from normalized EFDs
         y_star = np.zeros(len(t)) #Y-coordinate of reconstructed shape from normalized EFDs
-        
+        harmonics = []
         for j in range(N):
             aj = efd_list[j][0]
             bj = efd_list[j][1]
@@ -375,6 +401,7 @@ def FPS_calc(im_path,isSaveAll,save_dir,file,grouplist,HEADER,BGC,delt,N,MIN,SCA
             FPS_matrix[i][2*j+PRE_HEADER+N*5+1] = (efd_star_array[2]*efd_star_array[2]+efd_star_array[3]*efd_star_array[3])/2
             x_star += efd_star_array[0]*np.cos(2*(j+1)*np.pi*t/T) + efd_star_array[1]*np.sin(2*(j+1)*np.pi*t/T)
             y_star += efd_star_array[2]*np.cos(2*(j+1)*np.pi*t/T) + efd_star_array[3]*np.sin(2*(j+1)*np.pi*t/T)
+            harmonics.append( [efd_star_array[0]*np.cos(2*(j+1)*np.pi*t/T) + efd_star_array[1]*np.sin(2*(j+1)*np.pi*t/T), efd_star_array[2]*np.cos(2*(j+1)*np.pi*t/T) + efd_star_array[3]*np.sin(2*(j+1)*np.pi*t/T) ] )
         # Save all normalized clasts
         if isSaveAll:
             fig,ax = plt.subplots()
@@ -385,6 +412,46 @@ def FPS_calc(im_path,isSaveAll,save_dir,file,grouplist,HEADER,BGC,delt,N,MIN,SCA
             ax.set_ylim([-1.0,1.0])
             plt.savefig(save_dir+os.sep+"NormalizedDATASET"+os.sep+Photo+'_'+str(i+1)+"_nc.pdf")
             plt.close()
+            # os.makedirs(save_dir+os.sep+"NormalizedDATASET_EH",exist_ok=True)
+
+            for j,harmonic in enumerate(harmonics):
+                plt.close()
+                # matplotlib.pyplot.plot(self.tsample,harmonic[0]-harmonicsf[i][0])
+                plt.plot(t,harmonic[0])
+                # matplotlib.pyplot.axes().set_aspect(aspect=0.5)
+                # matplotlib.pyplot.axes().tick_params(labelbottom=False,bottom=False);
+                # matplotlib.pyplot.axes().tick_params(labelleft=False,left=False);
+                plt.axes().set( xlim=(min(t)-0.1,max(t)+0.1), ylim=( min(harmonic[0])-0.1, max(harmonic[0])+0.1 ) )
+                plt.savefig(save_dir+os.sep+"NormalizedDATASET_EH"+os.sep+Photo+'_'+str(i+1)+'_'+str(j+1)+'_X.pdf')
+                plt.close()
+                # matplotlib.pyplot.plot(self.tsample,harmonic[1]-harmonicsf[i][1])
+                plt.plot(t,harmonic[1])
+                # matplotlib.pyplot.axes().set_aspect(aspect=0.5)
+                # matplotlib.pyplot.axes().tick_params(labelbottom=False,bottom=False);
+                # matplotlib.pyplot.axes().tick_params(labelleft=False,left=False);
+                plt.axes().set( xlim=(min(t)-0.1,max(t)+0.1), ylim=( min(harmonic[1])-0.1, max(harmonic[1])+0.1 ) )
+                plt.savefig(save_dir+os.sep+"NormalizedDATASET_EH"+os.sep+Photo+'_'+str(i+1)+'_'+str(j+1)+'_Y.pdf')
+
+            margin = max( x_star*0.4 )
+            for k in range(0,int(len(t)/5)):
+                plt.plot(x_star,y_star)
+                x_r = 0; y_r = 0; 
+                for l,harmonic in enumerate(harmonics):
+                    plt.plot([x_r,x_r + harmonic[0][k*5]],[y_r , y_r + harmonic[1][k*5] ],color='red')
+                    x_hn = harmonic[0] + x_r
+                    y_hn = harmonic[1] + y_r
+                    x_r += harmonic[0][k*5]
+                    y_r += harmonic[1][k*5]
+                    plt.plot(x_hn,y_hn,color='black',alpha=0.5)
+                
+                plt.axes().set_aspect('equal')
+                plt.axes().tick_params(labelbottom=False,bottom=False);
+                plt.axes().tick_params(labelleft=False,left=False);
+                plt.axes().set(xlim=(min(x_star)-margin,max(x_star)+margin),ylim=(min(y_star)-margin,max(y_star)+margin))
+                # matplotlib.pyplot.gca().set_ylim(min(self.N_list[-1][1])*1.4,max(self.N_list[-1][1])*1.4)
+                plt.savefig(save_dir+os.sep+"NormalizedDATASET_EH"+os.sep+Photo+'_'+str(i+1)+'_'+str(k)+"_harm.pdf")
+                plt.close()
+
     df_pre = pd.DataFrame({ 'FileName_' :Photo,
                             'DataCount_'   :np.arange(1,len(contours)+1)
                             })
