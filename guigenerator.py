@@ -226,7 +226,48 @@ class GraphAnimation(QThread):
             matplotlib.pyplot.pause(0.02)
         self.parent.ui.button_startsample.setEnabled(True)
 
+class GraphAnimation_Harmonics(QThread):
+    graphRenew = pyqtSignal(int)
 
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.w = Qw.QDialog(parent)
+        self.parent = parent
+
+    def run(self):
+        speed = 1
+        self.parent.ui.button_startsample.setEnabled(False)
+        N = self.parent.ui.sb_mh_sample.value() # Maximum Harmonics
+        # plot for y-projection
+        harmonics_list = []
+        radius_list = []
+        point_list = []
+        for i in range(N):
+            harmonics_list.append( self.parent.ax_rre.plot([],[],color='blue',alpha=0.5)[0] )
+            radius_list.append( self.parent.ax_rre.plot([],[],color='red')[0] )
+            point_list.append( self.parent.ax_rre.plot([],[],color='red')[0] )
+        im_shape, = self.parent.ax_rre.plot([],[],color='black') # original sample
+        self.parent.ax_rre.set_aspect('equal')
+        margin = max( self.parent.x_Na *0.4 )
+        self.parent.ax_rre.set(xlim=(min(self.parent.x_Na)-margin,max(self.parent.x_Na)+margin),ylim=(min(self.parent.y_Na)-margin,max(self.parent.y_Na)+margin))
+        self.parent.ax_rre.plot(self.parent.N_list[-1][0],self.parent.N_list[-1][1],color='black')
+        
+        margin = max( self.parent.N_list[-1][0]*0.4 )
+        for i in range(0,int(len(self.parent.tsample)/speed)):
+            x_r = 0; y_r = 0; 
+            print('test: '+str(i))
+            for j,harmonic in enumerate(self.parent.harmonics):
+                radius_list[j].set_data([x_r,x_r + harmonic[0][i*speed]],[y_r , y_r + harmonic[1][i*speed] ] )
+                x_hn = harmonic[0] + x_r
+                y_hn = harmonic[1] + y_r
+                x_r += harmonic[0][i*speed]
+                y_r += harmonic[1][i*speed]
+                harmonics_list[j].set_data(x_hn,y_hn)
+                point_list[j].set_data(x_r,y_r)
+                
+            self.graphRenew.emit(i)
+            matplotlib.pyplot.pause(0.02)
+        self.parent.ui.button_startsample.setEnabled(True)
 
 
 ## Main Window #####
@@ -324,6 +365,9 @@ class MyForm(Qw.QMainWindow):
         #-- Playground --------
         self.ga = GraphAnimation(self)
         self.ga.graphRenew.connect(self.projection)
+        self.gah = GraphAnimation_Harmonics(self)
+        self.gah.graphRenew.connect(self.projection_h)
+
         self.isSampleMODE = False
         self.sample_path = ''
         self.layout_ori = Qw.QGridLayout(self.ui.gv_original);
@@ -441,7 +485,7 @@ class MyForm(Qw.QMainWindow):
         self.Nsample = self.ui.sb_mh_sample.value() # Maximum Harmonics
         self.sample_cnt = self.sample_contours[self.ui.sb_snum_sample.value()-1] # choose contour
         x_t,y_t = ef.adjustXYCoord(ef.getXYCoord(self.sample_cnt)[0],ef.getXYCoord(self.sample_cnt)[1]) # extract contour coordinates
-        self.N_list,x_p,y_p,t = ef.fourierApproximation(self.sample_cnt,self.Nsample) # Reconstructed shape by N harmonics
+        self.N_list,self.harmonics,self.harmonicsf,x_p,y_p,t = ef.fourierApproximation(self.sample_cnt,self.Nsample) # Reconstructed shape by N harmonics
         self.x_p_ori = np.copy(x_p) # Original x coordinate
         self.y_p_ori = np.copy(y_p) # Original y coordinate
         self.tsample = t
@@ -455,6 +499,53 @@ class MyForm(Qw.QMainWindow):
         y_pa = -1*y_pa
         self.x_pa_ori = x_pa
         self.y_pa_ori = y_pa
+        self.x_Na = x_Na
+        self.y_Na = y_Na
+        # #-- Test
+        # os.makedirs("TEST",exist_ok=True)
+        # p_num = int(len(harmonics[0][0])/2)
+        # # t = 0.5
+        # # T = 1.0
+        # # matplotlib.pyplot.plot(self.N_list[-1][0],self.N_list[-1][1])
+        # # x_r = 0; y_r = 0; 
+        # # matplotlib.pyplot.plot(harmonics[0][0],harmonics[0][1])
+        # for i,harmonic in enumerate(harmonics):
+        #     matplotlib.pyplot.close()
+        #     # matplotlib.pyplot.plot(self.tsample,harmonic[0]-harmonicsf[i][0])
+        #     matplotlib.pyplot.plot(self.tsample,harmonic[0])
+        #     # matplotlib.pyplot.axes().set_aspect(aspect=0.5)
+        #     # matplotlib.pyplot.axes().tick_params(labelbottom=False,bottom=False);
+        #     # matplotlib.pyplot.axes().tick_params(labelleft=False,left=False);
+        #     matplotlib.pyplot.axes().set( xlim=(min(self.tsample)-0.1,max(self.tsample)+0.1), ylim=( min(harmonic[0])-0.1, max(harmonic[0])+0.1 ) )
+        #     matplotlib.pyplot.savefig("Test/harmonic_x_"+str(i+1)+'.pdf')
+        #     matplotlib.pyplot.close()
+        #     # matplotlib.pyplot.plot(self.tsample,harmonic[1]-harmonicsf[i][1])
+        #     matplotlib.pyplot.plot(self.tsample,harmonic[1])
+        #     # matplotlib.pyplot.axes().set_aspect(aspect=0.5)
+        #     # matplotlib.pyplot.axes().tick_params(labelbottom=False,bottom=False);
+        #     # matplotlib.pyplot.axes().tick_params(labelleft=False,left=False);
+        #     matplotlib.pyplot.axes().set( xlim=(min(self.tsample)-0.1,max(self.tsample)+0.1), ylim=( min(harmonic[1])-0.1, max(harmonic[1])+0.1 ) )
+        #     matplotlib.pyplot.savefig("Test/harmonic_y_"+str(i+1)+'.pdf')
+
+        # margin = max( self.N_list[-1][0]*0.4 )
+        # for j in range(0,int(len(self.tsample)/5)):
+        #     matplotlib.pyplot.plot(self.N_list[-1][0],self.N_list[-1][1])
+        #     x_r = 0; y_r = 0; 
+        #     for i,harmonic in enumerate(harmonics):
+        #         matplotlib.pyplot.plot([x_r,x_r + harmonic[0][j*5]],[y_r , y_r + harmonic[1][j*5] ],color='red')
+        #         x_hn = harmonic[0] + x_r
+        #         y_hn = harmonic[1] + y_r
+        #         x_r += harmonic[0][j*5]
+        #         y_r += harmonic[1][j*5]
+        #         matplotlib.pyplot.plot(x_hn,y_hn,color='black',alpha=0.5)
+            
+        #     matplotlib.pyplot.axes().set_aspect('equal')
+        #     matplotlib.pyplot.axes().tick_params(labelbottom=False,bottom=False);
+        #     matplotlib.pyplot.axes().tick_params(labelleft=False,left=False);
+        #     matplotlib.pyplot.axes().set(xlim=(min(self.N_list[-1][0])-margin,max(self.N_list[-1][0])+margin),ylim=(min(self.N_list[-1][1])-margin,max(self.N_list[-1][1])+margin))
+        #     # matplotlib.pyplot.gca().set_ylim(min(self.N_list[-1][1])*1.4,max(self.N_list[-1][1])*1.4)
+        #     matplotlib.pyplot.savefig("TEST/test"+str(j)+".pdf")
+        #     matplotlib.pyplot.close()
 
         #-- Sample Image view ---------
         pixmap = Qg.QPixmap(self.sample_path)
@@ -469,7 +560,7 @@ class MyForm(Qw.QMainWindow):
         self.axss.set_aspect('equal', 'datalim');
         matplotlib.pyplot.xlim([min(x_t),max(x_t)]);
         matplotlib.pyplot.ylim([min(y_t),max(y_t)]);
-        pd.DataFrame({"x":x_t,"y":y_t}).plot(kind="scatter",x="x", y="y", ax=self.axss,s=0.01,alpha=0);
+        pd.DataFrame({"x":x_t,"y":y_t}).plot(kind="line",x="x", y="y", ax=self.axss,alpha=0);
         self.axss.fill(x_t,y_t,color='black',alpha=0.5);
         self.axss.set_xlabel("");
         self.axss.set_ylabel("");
@@ -481,8 +572,8 @@ class MyForm(Qw.QMainWindow):
         # self.ax_x.set_aspect('equal', 'datalim');
         self.ax_x.set_xlim([min(t),max(t)]);
         self.ax_x.set_ylim([min(x_pa),max(x_pa)]);
-        pd.DataFrame({"x":t,"y":x_Na}).plot(kind="scatter",x="x", y="y", ax=self.ax_x,color='red',s=1.0,alpha=0.5);
-        pd.DataFrame({"x":t,"y":x_pa}).plot(kind="scatter",x="x", y="y", ax=self.ax_x,color='black',s=0.5,alpha=1);
+        pd.DataFrame({"x":t,"y":x_Na}).plot(kind="line",x="x", y="y", ax=self.ax_x,color='red',alpha=0.5);
+        pd.DataFrame({"x":t,"y":x_pa}).plot(kind="line",x="x", y="y", ax=self.ax_x,color='black',alpha=1);
         # label, title
         self.ax_x.set_xlabel("");
         self.ax_x.set_ylabel("");
@@ -495,8 +586,8 @@ class MyForm(Qw.QMainWindow):
         # self.ax_y.set_aspect('equal', 'datalim');
         self.ax_y.set_xlim([min(t),max(t)]);
         self.ax_y.set_ylim([min(y_pa),max(y_pa)]);
-        pd.DataFrame({"x":t,"y":y_Na}).plot(kind="scatter",x="x", y="y", ax=self.ax_y,color='red',s=1.0,alpha=0.5);
-        pd.DataFrame({"x":t,"y":y_pa}).plot(kind="scatter",x="x", y="y", ax=self.ax_y,color='black',s=0.5,alpha=1);
+        pd.DataFrame({"x":t,"y":y_Na}).plot(kind="line",x="x", y="y", ax=self.ax_y,color='red',alpha=0.5);
+        pd.DataFrame({"x":t,"y":y_pa}).plot(kind="line",x="x", y="y", ax=self.ax_y,color='black',alpha=1);
         # label title
         self.ax_y.set_xlabel("");
         self.ax_y.set_ylabel("");
@@ -508,7 +599,7 @@ class MyForm(Qw.QMainWindow):
         self.ax_rre.set_aspect('equal', 'datalim');
         self.ax_rre.set_xlim([min(x_t),max(x_t)]);
         self.ax_rre.set_ylim([min(y_t),max(y_t)*1.3]);
-        pd.DataFrame({"x":x_Na,"y":y_Na}).plot(kind="scatter",x="x", y="y", ax=self.ax_rre,s=0.01,alpha=1,color="#E8846D");
+        pd.DataFrame({"x":x_Na,"y":y_Na}).plot(kind="line",x="x", y="y", ax=self.ax_rre,alpha=1,color="#E8846D");
         self.ax_rre.fill(x_Na,y_Na,color='#E8846D',alpha=0.5);
         self.ax_rre.set_xlabel("");
         self.ax_rre.set_ylabel("");
@@ -524,8 +615,8 @@ class MyForm(Qw.QMainWindow):
         self.ax_rcom.set_aspect('equal', 'datalim');
         self.ax_rcom.set_xlim([min(x_t),max(x_t)]);
         self.ax_rcom.set_ylim([min(y_t),max(y_t)*1.3]);
-        pd.DataFrame({"x":x_pa,"y":y_pa}).plot(kind="scatter",x="x", y="y", ax=self.ax_rcom,s=0.01,alpha=0.5,color='#6DBBE8');
-        pd.DataFrame({"x":x_Na,"y":y_Na}).plot(kind="scatter",x="x", y="y", ax=self.ax_rcom,s=1,alpha=1.0,color='red');
+        pd.DataFrame({"x":x_pa,"y":y_pa}).plot(kind="line",x="x", y="y", ax=self.ax_rcom,alpha=0.5,color='#6DBBE8');
+        pd.DataFrame({"x":x_Na,"y":y_Na}).plot(kind="line",x="x", y="y", ax=self.ax_rcom,alpha=1.0,color='red');
         self.ax_rcom.fill(x_pa,y_pa,color='#6DBBE8',alpha=0.5);
         self.ax_rcom.set_xlabel("");
         self.ax_rcom.set_ylabel("");
@@ -544,8 +635,11 @@ class MyForm(Qw.QMainWindow):
         self.y_pap = y_pa/self.width
         self.ax_py.clear()
         self.ax_px.clear()
+        self.ax_rre.clear()
         if self.ui.tabWidget_2.currentIndex() == 1:
             self.ga.start()
+        elif self.ui.tabWidget_2.currentIndex() == 3:
+            self.gah.start()
         
     
     
@@ -554,6 +648,9 @@ class MyForm(Qw.QMainWindow):
         self.figpx.canvas.draw_idle();
         self.figpy.canvas.draw_idle(); 
         
+    def projection_h(self,frame):
+        self.fig_rre.canvas.draw_idle();
+        # self.figpy.canvas.draw_idle(); 
 
         
 
@@ -1463,31 +1560,44 @@ class MyForm(Qw.QMainWindow):
 
             for i in range(20):
                 if self.isFPS !=2: # FPS or AMp
-                    pd.DataFrame({"x":ef.reconstContourCoord(self.N,fps1,self.isFPS)[0],"y":ef.reconstContourCoord(self.N,fps1,self.isFPS)[1]}).plot(kind="scatter",x="x", y="y",c=[[random.random(),random.random(),random.random()]], ax=self.ax11,s=0.5)
-                    pd.DataFrame({"x":ef.reconstContourCoord(self.N,fps2,self.isFPS)[0],"y":ef.reconstContourCoord(self.N,fps2,self.isFPS)[1]}).plot(kind="scatter",x="x", y="y",c=[[random.random(),random.random(),random.random()]], ax=self.ax12,s=0.5)
-                    pd.DataFrame({"x":ef.reconstContourCoord(self.N,fps3,self.isFPS)[0],"y":ef.reconstContourCoord(self.N,fps3,self.isFPS)[1]}).plot(kind="scatter",x="x", y="y",c=[[random.random(),random.random(),random.random()]], ax=self.ax13,s=0.5)
-                    pd.DataFrame({"x":ef.reconstContourCoord(self.N,fps4,self.isFPS)[0],"y":ef.reconstContourCoord(self.N,fps4,self.isFPS)[1]}).plot(kind="scatter",x="x", y="y",c=[[random.random(),random.random(),random.random()]], ax=self.ax21,s=0.5)
-                    pd.DataFrame({"x":ef.reconstContourCoord(self.N,fps5,self.isFPS)[0],"y":ef.reconstContourCoord(self.N,fps5,self.isFPS)[1]}).plot(kind="scatter",x="x", y="y",c=[[random.random(),random.random(),random.random()]], ax=self.ax22,s=0.5)
-                    pd.DataFrame({"x":ef.reconstContourCoord(self.N,fps6,self.isFPS)[0],"y":ef.reconstContourCoord(self.N,fps6,self.isFPS)[1]}).plot(kind="scatter",x="x", y="y",c=[[random.random(),random.random(),random.random()]], ax=self.ax23,s=0.5)
-                    pd.DataFrame({"x":ef.reconstContourCoord(self.N,fps7,self.isFPS)[0],"y":ef.reconstContourCoord(self.N,fps7,self.isFPS)[1]}).plot(kind="scatter",x="x", y="y",c=[[random.random(),random.random(),random.random()]], ax=self.ax31,s=0.5)
-                    pd.DataFrame({"x":ef.reconstContourCoord(self.N,fps8,self.isFPS)[0],"y":ef.reconstContourCoord(self.N,fps8,self.isFPS)[1]}).plot(kind="scatter",x="x", y="y",c=[[random.random(),random.random(),random.random()]], ax=self.ax32,s=0.5)
-                    pd.DataFrame({"x":ef.reconstContourCoord(self.N,fps9,self.isFPS)[0],"y":ef.reconstContourCoord(self.N,fps9,self.isFPS)[1]}).plot(kind="scatter",x="x", y="y",c=[[random.random(),random.random(),random.random()]], ax=self.ax33,s=0.5)
-                else:
-                    pd.DataFrame({"x":ef.reconstContourCoord(self.N,fps1,self.isFPS)[0],"y":ef.reconstContourCoord(self.N,fps1,self.isFPS)[1]}).plot(kind="scatter",x="x", y="y",c='k', ax=self.ax11,s=0.5)
-                    pd.DataFrame({"x":ef.reconstContourCoord(self.N,fps2,self.isFPS)[0],"y":ef.reconstContourCoord(self.N,fps2,self.isFPS)[1]}).plot(kind="scatter",x="x", y="y",c='k', ax=self.ax12,s=0.5)
-                    pd.DataFrame({"x":ef.reconstContourCoord(self.N,fps3,self.isFPS)[0],"y":ef.reconstContourCoord(self.N,fps3,self.isFPS)[1]}).plot(kind="scatter",x="x", y="y",c='k', ax=self.ax13,s=0.5)
-                    pd.DataFrame({"x":ef.reconstContourCoord(self.N,fps4,self.isFPS)[0],"y":ef.reconstContourCoord(self.N,fps4,self.isFPS)[1]}).plot(kind="scatter",x="x", y="y",c='k', ax=self.ax21,s=0.5)
-                    pd.DataFrame({"x":ef.reconstContourCoord(self.N,fps5,self.isFPS)[0],"y":ef.reconstContourCoord(self.N,fps5,self.isFPS)[1]}).plot(kind="scatter",x="x", y="y",c='k', ax=self.ax22,s=0.5)
-                    pd.DataFrame({"x":ef.reconstContourCoord(self.N,fps6,self.isFPS)[0],"y":ef.reconstContourCoord(self.N,fps6,self.isFPS)[1]}).plot(kind="scatter",x="x", y="y",c='k', ax=self.ax23,s=0.5)
-                    pd.DataFrame({"x":ef.reconstContourCoord(self.N,fps7,self.isFPS)[0],"y":ef.reconstContourCoord(self.N,fps7,self.isFPS)[1]}).plot(kind="scatter",x="x", y="y",c='k', ax=self.ax31,s=0.5)
-                    pd.DataFrame({"x":ef.reconstContourCoord(self.N,fps8,self.isFPS)[0],"y":ef.reconstContourCoord(self.N,fps8,self.isFPS)[1]}).plot(kind="scatter",x="x", y="y",c='k', ax=self.ax32,s=0.5)
-                    pd.DataFrame({"x":ef.reconstContourCoord(self.N,fps9,self.isFPS)[0],"y":ef.reconstContourCoord(self.N,fps9,self.isFPS)[1]}).plot(kind="scatter",x="x", y="y",c='k', ax=self.ax33,s=0.5)
+                    # pd.DataFrame({"x":ef.reconstContourCoord(self.N,fps1,self.isFPS)[0],"y":ef.reconstContourCoord(self.N,fps1,self.isFPS)[1]}).plot(kind="line",x="x", y="y",c=[[random.random(),random.random(),random.random()]], ax=self.ax11)#,s=0.5)
+                    # pd.DataFrame({"x":ef.reconstContourCoord(self.N,fps2,self.isFPS)[0],"y":ef.reconstContourCoord(self.N,fps2,self.isFPS)[1]}).plot(kind="line",x="x", y="y",c=[[random.random(),random.random(),random.random()]], ax=self.ax12)#,s=0.5)
+                    # pd.DataFrame({"x":ef.reconstContourCoord(self.N,fps3,self.isFPS)[0],"y":ef.reconstContourCoord(self.N,fps3,self.isFPS)[1]}).plot(kind="line",x="x", y="y",c=[[random.random(),random.random(),random.random()]], ax=self.ax13)#,s=0.5)
+                    # pd.DataFrame({"x":ef.reconstContourCoord(self.N,fps4,self.isFPS)[0],"y":ef.reconstContourCoord(self.N,fps4,self.isFPS)[1]}).plot(kind="line",x="x", y="y",c=[[random.random(),random.random(),random.random()]], ax=self.ax21)#,s=0.5)
+                    # pd.DataFrame({"x":ef.reconstContourCoord(self.N,fps5,self.isFPS)[0],"y":ef.reconstContourCoord(self.N,fps5,self.isFPS)[1]}).plot(kind="line",x="x", y="y",c=[[random.random(),random.random(),random.random()]], ax=self.ax22)#,s=0.5)
+                    # pd.DataFrame({"x":ef.reconstContourCoord(self.N,fps6,self.isFPS)[0],"y":ef.reconstContourCoord(self.N,fps6,self.isFPS)[1]}).plot(kind="line",x="x", y="y",c=[[random.random(),random.random(),random.random()]], ax=self.ax23)#,s=0.5)
+                    # pd.DataFrame({"x":ef.reconstContourCoord(self.N,fps7,self.isFPS)[0],"y":ef.reconstContourCoord(self.N,fps7,self.isFPS)[1]}).plot(kind="line",x="x", y="y",c=[[random.random(),random.random(),random.random()]], ax=self.ax31)#,s=0.5)
+                    # pd.DataFrame({"x":ef.reconstContourCoord(self.N,fps8,self.isFPS)[0],"y":ef.reconstContourCoord(self.N,fps8,self.isFPS)[1]}).plot(kind="line",x="x", y="y",c=[[random.random(),random.random(),random.random()]], ax=self.ax32)#,s=0.5)
+                    # pd.DataFrame({"x":ef.reconstContourCoord(self.N,fps9,self.isFPS)[0],"y":ef.reconstContourCoord(self.N,fps9,self.isFPS)[1]}).plot(kind="line",x="x", y="y",c=[[random.random(),random.random(),random.random()]], ax=self.ax33)#,s=0.5)
+                    pd.DataFrame({"x":ef.reconstContourCoord(self.N,fps1,self.isFPS)[0],"y":ef.reconstContourCoord(self.N,fps1,self.isFPS)[1]}).plot(kind="line",x="x", y="y",c=np.random.rand(3,), ax=self.ax11)#,s=0.5)
+                    pd.DataFrame({"x":ef.reconstContourCoord(self.N,fps2,self.isFPS)[0],"y":ef.reconstContourCoord(self.N,fps2,self.isFPS)[1]}).plot(kind="line",x="x", y="y",c=np.random.rand(3,), ax=self.ax12)#,s=0.5)
+                    pd.DataFrame({"x":ef.reconstContourCoord(self.N,fps3,self.isFPS)[0],"y":ef.reconstContourCoord(self.N,fps3,self.isFPS)[1]}).plot(kind="line",x="x", y="y",c=np.random.rand(3,), ax=self.ax13)#,s=0.5)
+                    pd.DataFrame({"x":ef.reconstContourCoord(self.N,fps4,self.isFPS)[0],"y":ef.reconstContourCoord(self.N,fps4,self.isFPS)[1]}).plot(kind="line",x="x", y="y",c=np.random.rand(3,), ax=self.ax21)#,s=0.5)
+                    pd.DataFrame({"x":ef.reconstContourCoord(self.N,fps5,self.isFPS)[0],"y":ef.reconstContourCoord(self.N,fps5,self.isFPS)[1]}).plot(kind="line",x="x", y="y",c=np.random.rand(3,), ax=self.ax22)#,s=0.5)
+                    pd.DataFrame({"x":ef.reconstContourCoord(self.N,fps6,self.isFPS)[0],"y":ef.reconstContourCoord(self.N,fps6,self.isFPS)[1]}).plot(kind="line",x="x", y="y",c=np.random.rand(3,), ax=self.ax23)#,s=0.5)
+                    pd.DataFrame({"x":ef.reconstContourCoord(self.N,fps7,self.isFPS)[0],"y":ef.reconstContourCoord(self.N,fps7,self.isFPS)[1]}).plot(kind="line",x="x", y="y",c=np.random.rand(3,), ax=self.ax31)#,s=0.5)
+                    pd.DataFrame({"x":ef.reconstContourCoord(self.N,fps8,self.isFPS)[0],"y":ef.reconstContourCoord(self.N,fps8,self.isFPS)[1]}).plot(kind="line",x="x", y="y",c=np.random.rand(3,), ax=self.ax32)#,s=0.5)
+                    pd.DataFrame({"x":ef.reconstContourCoord(self.N,fps9,self.isFPS)[0],"y":ef.reconstContourCoord(self.N,fps9,self.isFPS)[1]}).plot(kind="line",x="x", y="y",c=np.random.rand(3,), ax=self.ax33)#,s=0.5)
+            if self.isFPS ==2:
+                pd.DataFrame({"x":ef.reconstContourCoord(self.N,fps1,self.isFPS)[0],"y":ef.reconstContourCoord(self.N,fps1,self.isFPS)[1]}).plot(kind="line",x="x", y="y",c='k', ax=self.ax11)#,s=0.5)
+                pd.DataFrame({"x":ef.reconstContourCoord(self.N,fps2,self.isFPS)[0],"y":ef.reconstContourCoord(self.N,fps2,self.isFPS)[1]}).plot(kind="line",x="x", y="y",c='k', ax=self.ax12)#,s=0.5)
+                pd.DataFrame({"x":ef.reconstContourCoord(self.N,fps3,self.isFPS)[0],"y":ef.reconstContourCoord(self.N,fps3,self.isFPS)[1]}).plot(kind="line",x="x", y="y",c='k', ax=self.ax13)#,s=0.5)
+                pd.DataFrame({"x":ef.reconstContourCoord(self.N,fps4,self.isFPS)[0],"y":ef.reconstContourCoord(self.N,fps4,self.isFPS)[1]}).plot(kind="line",x="x", y="y",c='k', ax=self.ax21)#,s=0.5)
+                pd.DataFrame({"x":ef.reconstContourCoord(self.N,fps5,self.isFPS)[0],"y":ef.reconstContourCoord(self.N,fps5,self.isFPS)[1]}).plot(kind="line",x="x", y="y",c='k', ax=self.ax22)#,s=0.5)
+                pd.DataFrame({"x":ef.reconstContourCoord(self.N,fps6,self.isFPS)[0],"y":ef.reconstContourCoord(self.N,fps6,self.isFPS)[1]}).plot(kind="line",x="x", y="y",c='k', ax=self.ax23)#,s=0.5)
+                pd.DataFrame({"x":ef.reconstContourCoord(self.N,fps7,self.isFPS)[0],"y":ef.reconstContourCoord(self.N,fps7,self.isFPS)[1]}).plot(kind="line",x="x", y="y",c='k', ax=self.ax31)#,s=0.5)
+                pd.DataFrame({"x":ef.reconstContourCoord(self.N,fps8,self.isFPS)[0],"y":ef.reconstContourCoord(self.N,fps8,self.isFPS)[1]}).plot(kind="line",x="x", y="y",c='k', ax=self.ax32)#,s=0.5)
+                pd.DataFrame({"x":ef.reconstContourCoord(self.N,fps9,self.isFPS)[0],"y":ef.reconstContourCoord(self.N,fps9,self.isFPS)[1]}).plot(kind="line",x="x", y="y",c='k', ax=self.ax33)#,s=0.5)
             self.ax11.set_ylabel("PC1 -" + str(self.sumdev) + "$\\sigma$");self.ax12.set_ylabel("PC1 mean");self.ax13.set_ylabel("PC1 " + str(self.sumdev) + "$\\sigma$");
             self.ax21.set_ylabel("PC2 -" + str(self.sumdev) + "$\\sigma$");self.ax22.set_ylabel("PC2 mean");self.ax23.set_ylabel("PC2 " + str(self.sumdev) + "$\\sigma$");
             self.ax31.set_ylabel("PC3 -" + str(self.sumdev) + "$\\sigma$");self.ax32.set_ylabel("PC3 mean");self.ax33.set_ylabel("PC3 " + str(self.sumdev) + "$\\sigma$");
             self.ax11.set_xlabel("");self.ax12.set_xlabel("");self.ax13.set_xlabel("");
             self.ax21.set_xlabel("");self.ax22.set_xlabel("");self.ax23.set_xlabel("");
             self.ax31.set_xlabel("");self.ax32.set_xlabel("");self.ax33.set_xlabel("");
+
+            self.ax11.get_legend().remove();self.ax12.get_legend().remove();self.ax13.get_legend().remove();
+            self.ax21.get_legend().remove();self.ax22.get_legend().remove();self.ax23.get_legend().remove();
+            self.ax31.get_legend().remove();self.ax32.get_legend().remove();self.ax33.get_legend().remove();
             self.fig11.canvas.draw_idle(); self.fig12.canvas.draw_idle(); self.fig13.canvas.draw_idle();
             self.fig21.canvas.draw_idle(); self.fig22.canvas.draw_idle(); self.fig23.canvas.draw_idle(); 
             self.fig31.canvas.draw_idle(); self.fig32.canvas.draw_idle(); self.fig33.canvas.draw_idle();
@@ -1513,15 +1623,15 @@ class MyForm(Qw.QMainWindow):
             x1,y1,e1 = ef.reconstContourCoord(self.N,fps,self.isFPS); x2,y2,e2 = ef.reconstContourCoord(self.N,fps,self.isFPS); x3,y3,e3 = ef.reconstContourCoord(self.N,fps,self.isFPS); 
             x4,y4,e4 = ef.reconstContourCoord(self.N,fps,self.isFPS); x5,y5,e5 = ef.reconstContourCoord(self.N,fps,self.isFPS); x6,y6,e6 = ef.reconstContourCoord(self.N,fps,self.isFPS);
             x7,y7,e7 = ef.reconstContourCoord(self.N,fps,self.isFPS); x8,y8,e8 = ef.reconstContourCoord(self.N,fps,self.isFPS); x9,y9,e9 = ef.reconstContourCoord(self.N,fps,self.isFPS);
-            pd.DataFrame({"x":x1,"y":y1}).plot(kind="scatter",x="x", y="y", ax=self.ax11,s=0.5); pd.DataFrame({"x":x2,"y":y2}).plot(kind="scatter",x="x", y="y", ax=self.ax12,s=0.5); pd.DataFrame({"x":x3,"y":y3}).plot(kind="scatter",x="x", y="y", ax=self.ax13,s=0.5); 
-            pd.DataFrame({"x":x4,"y":y4}).plot(kind="scatter",x="x", y="y", ax=self.ax21,s=0.5); pd.DataFrame({"x":x5,"y":y5}).plot(kind="scatter",x="x", y="y", ax=self.ax22,s=0.5); pd.DataFrame({"x":x6,"y":y6}).plot(kind="scatter",x="x", y="y", ax=self.ax23,s=0.5); 
-            pd.DataFrame({"x":x7,"y":y7}).plot(kind="scatter",x="x", y="y", ax=self.ax31,s=0.5); pd.DataFrame({"x":x8,"y":y8}).plot(kind="scatter",x="x", y="y", ax=self.ax32,s=0.5); pd.DataFrame({"x":x9,"y":y9}).plot(kind="scatter",x="x", y="y", ax=self.ax33,s=0.5);
+            pd.DataFrame({"x":x1,"y":y1}).plot(kind="line",x="x", y="y", ax=self.ax11); pd.DataFrame({"x":x2,"y":y2}).plot(kind="line",x="x", y="y", ax=self.ax12); pd.DataFrame({"x":x3,"y":y3}).plot(kind="line",x="x", y="y", ax=self.ax13); 
+            pd.DataFrame({"x":x4,"y":y4}).plot(kind="line",x="x", y="y", ax=self.ax21); pd.DataFrame({"x":x5,"y":y5}).plot(kind="line",x="x", y="y", ax=self.ax22); pd.DataFrame({"x":x6,"y":y6}).plot(kind="line",x="x", y="y", ax=self.ax23); 
+            pd.DataFrame({"x":x7,"y":y7}).plot(kind="line",x="x", y="y", ax=self.ax31); pd.DataFrame({"x":x8,"y":y8}).plot(kind="line",x="x", y="y", ax=self.ax32); pd.DataFrame({"x":x9,"y":y9}).plot(kind="line",x="x", y="y", ax=self.ax33);
             self.ax11.fill_between(x1,y1); self.ax12.fill_between(x2,y2); self.ax13.fill_between(x3,y3)
             self.ax21.fill_between(x4,y4); self.ax22.fill_between(x5,y5); self.ax23.fill_between(x6,y6)
             self.ax31.fill_between(x7,y7); self.ax32.fill_between(x8,y8); self.ax33.fill_between(x9,y9)
-            self.ax11.set_xlabel(""); self.ax12.set_xlabel(""); self.ax13.set_xlabel("");
-            self.ax21.set_xlabel(""); self.ax22.set_xlabel(""); self.ax23.set_xlabel("");
-            self.ax31.set_xlabel(""); self.ax32.set_xlabel(""); self.ax33.set_xlabel("");
+            self.ax11.get_legend().remove(); self.ax12.get_legend().remove(); self.ax13.get_legend().remove();
+            self.ax21.get_legend().remove(); self.ax22.get_legend().remove(); self.ax23.get_legend().remove();
+            self.ax31.get_legend().remove(); self.ax32.get_legend().remove(); self.ax33.get_legend().remove();
             self.ax11.set_ylabel(""); self.ax12.set_ylabel(""); self.ax13.set_ylabel("");
             self.ax21.set_ylabel(""); self.ax22.set_ylabel(""); self.ax23.set_ylabel("");
             self.ax31.set_ylabel(""); self.ax32.set_ylabel(""); self.ax33.set_ylabel("");
@@ -1564,3 +1674,4 @@ class MyForm(Qw.QMainWindow):
 #     wmain = MyForm()                        
 #     wmain.show()                            
 #     sys.exit(app.exec_())              
+   
