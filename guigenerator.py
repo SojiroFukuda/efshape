@@ -254,8 +254,7 @@ class GraphAnimation_Harmonics(QThread):
         
         margin = max( self.parent.N_list[-1][0]*0.4 )
         for i in range(0,int(len(self.parent.tsample)/speed)):
-            x_r = 0; y_r = 0; 
-            print('test: '+str(i))
+            x_r = 0; y_r = 0;
             for j,harmonic in enumerate(self.parent.harmonics):
                 radius_list[j].set_data([x_r,x_r + harmonic[0][i*speed]],[y_r , y_r + harmonic[1][i*speed] ] )
                 x_hn = harmonic[0] + x_r
@@ -501,51 +500,7 @@ class MyForm(Qw.QMainWindow):
         self.y_pa_ori = y_pa
         self.x_Na = x_Na
         self.y_Na = y_Na
-        # #-- Test
-        # os.makedirs("TEST",exist_ok=True)
-        # p_num = int(len(harmonics[0][0])/2)
-        # # t = 0.5
-        # # T = 1.0
-        # # matplotlib.pyplot.plot(self.N_list[-1][0],self.N_list[-1][1])
-        # # x_r = 0; y_r = 0; 
-        # # matplotlib.pyplot.plot(harmonics[0][0],harmonics[0][1])
-        # for i,harmonic in enumerate(harmonics):
-        #     matplotlib.pyplot.close()
-        #     # matplotlib.pyplot.plot(self.tsample,harmonic[0]-harmonicsf[i][0])
-        #     matplotlib.pyplot.plot(self.tsample,harmonic[0])
-        #     # matplotlib.pyplot.axes().set_aspect(aspect=0.5)
-        #     # matplotlib.pyplot.axes().tick_params(labelbottom=False,bottom=False);
-        #     # matplotlib.pyplot.axes().tick_params(labelleft=False,left=False);
-        #     matplotlib.pyplot.axes().set( xlim=(min(self.tsample)-0.1,max(self.tsample)+0.1), ylim=( min(harmonic[0])-0.1, max(harmonic[0])+0.1 ) )
-        #     matplotlib.pyplot.savefig("Test/harmonic_x_"+str(i+1)+'.pdf')
-        #     matplotlib.pyplot.close()
-        #     # matplotlib.pyplot.plot(self.tsample,harmonic[1]-harmonicsf[i][1])
-        #     matplotlib.pyplot.plot(self.tsample,harmonic[1])
-        #     # matplotlib.pyplot.axes().set_aspect(aspect=0.5)
-        #     # matplotlib.pyplot.axes().tick_params(labelbottom=False,bottom=False);
-        #     # matplotlib.pyplot.axes().tick_params(labelleft=False,left=False);
-        #     matplotlib.pyplot.axes().set( xlim=(min(self.tsample)-0.1,max(self.tsample)+0.1), ylim=( min(harmonic[1])-0.1, max(harmonic[1])+0.1 ) )
-        #     matplotlib.pyplot.savefig("Test/harmonic_y_"+str(i+1)+'.pdf')
-
-        # margin = max( self.N_list[-1][0]*0.4 )
-        # for j in range(0,int(len(self.tsample)/5)):
-        #     matplotlib.pyplot.plot(self.N_list[-1][0],self.N_list[-1][1])
-        #     x_r = 0; y_r = 0; 
-        #     for i,harmonic in enumerate(harmonics):
-        #         matplotlib.pyplot.plot([x_r,x_r + harmonic[0][j*5]],[y_r , y_r + harmonic[1][j*5] ],color='red')
-        #         x_hn = harmonic[0] + x_r
-        #         y_hn = harmonic[1] + y_r
-        #         x_r += harmonic[0][j*5]
-        #         y_r += harmonic[1][j*5]
-        #         matplotlib.pyplot.plot(x_hn,y_hn,color='black',alpha=0.5)
-            
-        #     matplotlib.pyplot.axes().set_aspect('equal')
-        #     matplotlib.pyplot.axes().tick_params(labelbottom=False,bottom=False);
-        #     matplotlib.pyplot.axes().tick_params(labelleft=False,left=False);
-        #     matplotlib.pyplot.axes().set(xlim=(min(self.N_list[-1][0])-margin,max(self.N_list[-1][0])+margin),ylim=(min(self.N_list[-1][1])-margin,max(self.N_list[-1][1])+margin))
-        #     # matplotlib.pyplot.gca().set_ylim(min(self.N_list[-1][1])*1.4,max(self.N_list[-1][1])*1.4)
-        #     matplotlib.pyplot.savefig("TEST/test"+str(j)+".pdf")
-        #     matplotlib.pyplot.close()
+        
 
         #-- Sample Image view ---------
         pixmap = Qg.QPixmap(self.sample_path)
@@ -675,7 +630,7 @@ class MyForm(Qw.QMainWindow):
             self.figpx.savefig(file_name+"projection_X.pdf",bbox_inches='tight')
             self.figpy.savefig(file_name+"projection_Y.pdf",bbox_inches='tight')
         except:
-            print('Warosu')
+            print('ERROR: Something wrong with your save folda')
             pass
         os.makedirs(FIG_FOLDA+os.sep+"Sample_Set"+os.sep+"sequence",exist_ok=True)
         os.makedirs(FIG_FOLDA+os.sep+"Sample_Set"+os.sep+"sequence"+os.sep+"comp",exist_ok=True)
