@@ -12,7 +12,7 @@ setup(
     author_email="S.Fukuda-2018@hull.ac.uk",
     entry_points={
         "console_scripts":[
-            "efshapeGUI = efshapegui:main",
+            "efshapeGUI = startGUI",
             ],
     },
 )
