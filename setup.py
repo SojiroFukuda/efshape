@@ -12,10 +12,10 @@ setup(
     author_email="S.Fukuda-2018@hull.ac.uk",
     entry_points={
         "console_scripts": [
-            "efshape = FPS-PCA-GUI.efshapegui:startGUI"
+            "efshape = efshapegui:main"
         ],
         "gui_scripts": [
-            "efshapegui = FPS-PCA-GUI.efshapegui:startGUI"
+            "efshapegui = efshapegui:main"
         ]
     }
 )
