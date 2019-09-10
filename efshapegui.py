@@ -10,8 +10,8 @@ def startGUI():
 ####   Execute this file to open GUI
 ####----------------------------------------
 #   main
-if __name__ == '__main__':
-    startGUI()
+# if __name__ == '__main__':
+#     startGUI()
 #     app = Qw.QApplication(sys.argv)         
 #     wmain = gui.MyForm()                        
 #     wmain.show()                            
