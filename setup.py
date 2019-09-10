@@ -9,10 +9,10 @@ setup(
     author_email="S.Fukuda-2018@hull.ac.uk",
     entry_points={
         "console_scripts": [
-            "efshape = main"
+            "efshape = startGUI"
         ],
         "gui_scripts": [
-            "efshapegui = main"
+            "efshapegui = startGUI"
         ]
     }
 )
