@@ -13,6 +13,9 @@ setup(
     entry_points={
         "console_scripts": [
             "efshape = efshapegui:main"
+        ],
+        "gui_scripts": [
+            "efshapegui = efshapegui:main"
         ]
     }
 )
