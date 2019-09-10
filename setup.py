@@ -15,7 +15,7 @@ setup(
             "efshape = efshapegui:startGUI"
         ],
         "gui_scripts": [
-            "efshapeGUI = efshapegui:startGUI"
+            "efshapegui = efshapegui:startGUI"
         ]
     }
 )
