@@ -14,7 +14,7 @@ from sklearn.decomposition import PCA
 import random
 import scipy.stats as st
 
-print("OpenCV: " + cv2.__version__)
+# print("OpenCV: " + cv2.__version__)
 
 #cnt = [ (x0,y0),(x1,y1),......]
 def convShape2func(cnt):
@@ -35,17 +35,6 @@ def getXYCoord(cnt):
 		y_t[i] = cnt[i][0][1]
 	return x_t,y_t
 
-# def adjustXYCoord(x,y):
-#     x_min = min(x)
-#     x_max = max(x)
-#     y_min = min(y)
-#     y_max = max(y)
-#     x_center = x_min+np.abs(x_max-x_min)/2
-#     y_center = y_min+np.abs(y_max-y_min)/2
-#     x_a = (x-x_center)/(np.abs(x_max-x_min)/2)
-#     y_a = -(y-y_center)/(np.abs(x_max-x_min)/2)
-#     return x_a,y_a
-
 def adjustXYCoord(x,y):
     x_min = min(x)
     x_max = max(x)
@@ -56,6 +45,15 @@ def adjustXYCoord(x,y):
     x_a = (x-x_center)
     y_a = -(y-y_center)
     return x_a,y_a
+
+def adjustCoordwithTime(cnt,t):
+    dt, cum = convShape2func(cnt)
+    x,y = getXYCoord(cnt)
+    inter_func_X = interp1d(cum/cum[-1],x,kind='linear')
+    inter_func_Y = interp1d(cum/cum[-1],y,kind='linear')
+    x_p = inter_func_X(t)
+    y_p = inter_func_Y(t)
+    return x_p,y_p
 
 def fourierApproximation(cnt,N):
     T = 1.0
@@ -99,7 +97,7 @@ def fourierApproximation(cnt,N):
     harmonicsf = []
     for i in range(N):
         #calculate EFDs
-        an, bn, cn, dn = efd(T,x_p,y_p,t,delt,i+1)
+        an, bn, cn, dn = efd(x_p,y_p,T,t,delt,i+1)
         efd_list.append(np.array([an,bn,cn,dn]))
         #Reconstruction
         x_r += an*np.cos(2*(i+1)*np.pi*t/T) + bn*np.sin(2*(i+1)*np.pi*t/T)
@@ -108,7 +106,7 @@ def fourierApproximation(cnt,N):
         N_list.append([np.copy(x_r),np.copy(y_r)])
 
         #calculate EFDs
-        anf, bnf, cnf, dnf = efd(T,xf_p,yf_p,t,delt,i+1)
+        anf, bnf, cnf, dnf = efd(xf_p,yf_p,T,t,delt,i+1)
         # efd_list.append(np.array([anf,bnf,cnf,dnf]))
         #Reconstruction
         xf_r += anf*np.cos(2*(i+1)*np.pi*t/T) + bnf*np.sin(2*(i+1)*np.pi*t/T)
@@ -119,7 +117,7 @@ def fourierApproximation(cnt,N):
     return N_list,harmonics,harmonicsf,x_p,y_p,t
 
 #function that returns the traditional EFDs
-def efd(T,x_p,y_p,t_p,dt,n):
+def efd(x_p,y_p,T,t_p,dt,n):
     an = 0
     bn = 0
     cn = 0
@@ -138,6 +136,44 @@ def efd(T,x_p,y_p,t_p,dt,n):
     cn = cn* (T/(2*n*n*pi*pi))
     dn = dn* (T/(2*n*n*pi*pi))
     return an,bn,cn,dn
+
+def efd_norm(efd_list,N,t,T):
+    efd_star_list = []
+    x_r, y_r = reconstContourCoord(efd_list,N,t,T)
+    a1, b1, c1, d1 = efd_list[0]
+    x1 = x_r[0]
+    y1 = y_r[0]
+    atan = np.arctan2( (2 * ( a1*b1 + c1*d1 )) , ( a1*a1 + c1*c1 - b1*b1 - d1*d1 ) )
+    if atan < 0:
+        atan += 2*np.pi
+    theta = 0.5 * atan
+
+    a1_star = a1 * np.cos(theta) + b1 * np.sin(theta)
+    c1_star = c1 * np.cos(theta) + d1 * np.sin(theta)
+    b1_star = -1 * a1 * np.sin(theta) + b1 * np.cos(theta)
+    d1_star = -1 * c1 * np.sin(theta) + d1 * np.cos(theta)
+
+    psi_1 = np.arctan2( c1_star , a1_star )
+    if psi_1 < 0:
+        psi_1 += 2*np.pi
+
+    E = np.sqrt( a1_star*a1_star + c1_star*c1_star )
+    psi_mat = np.array([[np.cos(psi_1),np.sin(psi_1)],[-1*np.sin(psi_1),np.cos(psi_1)]])
+    x_star = np.zeros(len(t)) #X-coordinate of reconstructed shape from normalized EFDs
+    y_star = np.zeros(len(t)) #Y-coordinate of reconstructed shape from normalized EFDs
+    harmonics = []
+    for j in range(N):
+        aj = efd_list[j][0]
+        bj = efd_list[j][1]
+        cj = efd_list[j][2]
+        dj = efd_list[j][3]
+        efd_n = np.array([[aj,bj],[cj,dj]])
+        theta_mat = np.array([[np.cos((j+1)*theta),-1*np.sin((j+1)*theta)],[np.sin((j+1)*theta),np.cos((j+1)*theta)]])
+        efd_star = np.dot( np.dot(psi_mat,efd_n), theta_mat)
+        efd_star_array = np.array([efd_star[0][0],efd_star[0][1],efd_star[1][0],efd_star[1][1]])
+        efd_star_array = efd_star_array / E
+        efd_star_list.append(efd_star_array) # acquire normalized EFDs
+    return efd_star_list
 
 def draw_contours(img,contours,file_name,save_dir):
     fig, ax = plt.subplots(figsize=(6,6))
@@ -220,7 +256,7 @@ def FPS_calc(im_path,isSaveAll,save_dir,file,grouplist,HEADER,BGC,delt,N,MIN,SCA
     
     gray,contours = getValidContours(im_path,MIN,BGC)
     scale_index, scale_area, scale_width, scale_height = setScale(contours,POSITION)
-    
+
     # unit/px
     unit_conv = 1
     if SCALE == 1:
@@ -318,7 +354,7 @@ def FPS_calc(im_path,isSaveAll,save_dir,file,grouplist,HEADER,BGC,delt,N,MIN,SCA
         # plt.show()
         for j in range(N):
             #calculate EFDs
-            an, bn, cn, dn = efd(T,x_p,y_p,t,delt,j+1)
+            an, bn, cn, dn = efd(x_p,y_p,T,t,delt,j+1)
             efd_list.append(np.array([an,bn,cn,dn]))
             #Reconstruction
             x_r += an*np.cos(2*(j+1)*np.pi*t/T) + bn*np.sin(2*(j+1)*np.pi*t/T)

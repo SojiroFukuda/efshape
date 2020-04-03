@@ -7,11 +7,11 @@ import os
 import re
 import glob
 import numpy as np
-import fpspcam as ef
+from . import efa as ef
 import pandas as pd
 import random
 import time
-import fgui as fpsGui                            
+from . import fgui as fpsGui                            
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from pathlib import Path
@@ -1621,6 +1621,14 @@ class MyForm(Qw.QMainWindow):
         self.fig32.savefig(file_name+"fig_32.pdf",bbox_inches='tight')
         self.fig33.savefig(file_name+"fig_33.pdf",bbox_inches='tight')
    
+def buildGUI(argv=sys.argv[1:]):
+    app = Qw.QApplication(sys.argv)         
+    wmain = MyForm()                        
+    wmain.show()                            
+    sys.exit(app.exec_())
+
+buildGUI()
+
 # ####----------------------------------------
 # #   main
 # if __name__ == '__main__':

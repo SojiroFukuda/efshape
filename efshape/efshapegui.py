@@ -1,6 +1,7 @@
 from PyQt5 import QtWidgets as Qw   
 import guigenerator as gui
 import sys
+
 def startGUI(argv=sys.argv[1:]):
     app = Qw.QApplication(sys.argv)         
     wmain = gui.MyForm()                        
