@@ -19,7 +19,8 @@ version = next((line.split('=')[1].strip().replace("'", '')
                 for line in open(os.path.join(here,
                                               'efshape',
                                               '__init__.py'))
-                if line.startswith('__version__ = ')),'0.0.1')
+                if line.startswith('__version__ = ')),'0.0.2')
+
 
 setup(
     name="efshape",
