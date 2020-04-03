@@ -5,7 +5,6 @@ Main/__init__.py
 efshape/__init__.py
 efshape/efa.py
 efshape/efgui.py
-efshape/efshapegui.py
 efshape/fgui.py
 efshape.egg-info/PKG-INFO
 efshape.egg-info/SOURCES.txt

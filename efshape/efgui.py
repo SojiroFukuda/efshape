@@ -1622,11 +1622,11 @@ class MyForm(Qw.QMainWindow):
         self.fig33.savefig(file_name+"fig_33.pdf",bbox_inches='tight')
    
 def buildGUI(argv=sys.argv[1:]):
-	print("Python: " + sys.version)
-	print("pandas ver. " + pd.__version__)
-	print("matplotlib ver. " + matplotlib.__version__)
-	print("numpy ver. " + np.__version__)
-	print("PyQt5 ver. " + PYQT_VERSION_STR)
+    print("Python: " + sys.version)
+    print("pandas ver. " + pd.__version__)
+    print("matplotlib ver. " + matplotlib.__version__)
+    print("numpy ver. " + np.__version__)
+    print("PyQt5 ver. " + PYQT_VERSION_STR)
     app = Qw.QApplication(sys.argv)         
     wmain = MyForm()                        
     wmain.show()                            

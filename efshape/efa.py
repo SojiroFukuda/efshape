@@ -18,22 +18,22 @@ import scipy.stats as st
 
 #cnt = [ (x0,y0),(x1,y1),......]
 def convShape2func(cnt):
-	dt = np.zeros( len( cnt ) - 1 ) # length along the countour between each coordinate.
-	cum = np.zeros( len( cnt ) ) # cumlative length of dt.
-	cum[0] = 0
-	for i in range(len( cnt ) - 1):
-		dt[i] = np.sqrt( (cnt[i+1][0][0]-cnt[i][0][0])*(cnt[i+1][0][0]-cnt[i][0][0]) + (cnt[i+1][0][1]-cnt[i][0][1])*(cnt[i+1][0][1]-cnt[i][0][1]) )
-		cum[i+1] = cum[i] + dt[i]
-	return dt, cum
+    dt = np.zeros( len( cnt ) - 1 ) # length along the countour between each coordinate.
+    cum = np.zeros( len( cnt ) ) # cumlative length of dt.
+    cum[0] = 0
+    for i in range(len( cnt ) - 1):
+        dt[i] = np.sqrt( (cnt[i+1][0][0]-cnt[i][0][0])*(cnt[i+1][0][0]-cnt[i][0][0]) + (cnt[i+1][0][1]-cnt[i][0][1])*(cnt[i+1][0][1]-cnt[i][0][1]) )
+        cum[i+1] = cum[i] + dt[i]
+    return dt, cum
 
 def getXYCoord(cnt):
-	length = len(cnt)
-	x_t = np.zeros(length)
-	y_t = np.zeros(length)
-	for i in range(length):
-		x_t[i] = cnt[i][0][0]
-		y_t[i] = cnt[i][0][1]
-	return x_t,y_t
+    length = len(cnt)
+    x_t = np.zeros(length)
+    y_t = np.zeros(length)
+    for i in range(length):
+        x_t[i] = cnt[i][0][0]
+        y_t[i] = cnt[i][0][1]
+    return x_t,y_t
 
 def adjustXYCoord(x,y):
     x_min = min(x)
