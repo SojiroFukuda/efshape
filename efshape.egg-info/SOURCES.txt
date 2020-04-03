@@ -1,0 +1,15 @@
+MANIFEST.in
+README.md
+setup.py
+Main/__init__.py
+efshape/__init__.py
+efshape/efa.py
+efshape/efgui.py
+efshape/efshapegui.py
+efshape/fgui.py
+efshape.egg-info/PKG-INFO
+efshape.egg-info/SOURCES.txt
+efshape.egg-info/dependency_links.txt
+efshape.egg-info/entry_points.txt
+efshape.egg-info/requires.txt
+efshape.egg-info/top_level.txt
