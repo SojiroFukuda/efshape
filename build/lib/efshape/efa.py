@@ -630,7 +630,7 @@ def conductPCA_correlation(csv_path,isFPS,isCor):
         scale_array = np.std(df.iloc[:,(FPS_loc + 5*N):])
         center_array= np.mean(df.iloc[:,(FPS_loc + 5*N):])
     # Correlation Matrix
-    print(isFPS)
+    # print(isFPS)
     if isFPS == 0:
         if isCor:
             dfs = df.iloc[:,FPS_loc:(FPS_loc + N )].apply(lambda x: (x-x.mean())/x.std(), axis=0)
