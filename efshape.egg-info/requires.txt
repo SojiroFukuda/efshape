@@ -1,5 +1,5 @@
 Pathlib2>=2.3.0
-PyQt5>=5.7.0
+PyQt6>=6.4.2
 cmocean>=2.0
 matplotlib>=3.0.0
 numpy>=1.16.0

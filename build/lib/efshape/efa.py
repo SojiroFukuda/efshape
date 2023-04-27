@@ -4,10 +4,11 @@ from scipy.optimize import curve_fit
 from scipy.interpolate import interp1d
 
 import pandas as pd
+import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle, Polygon, Rectangle
 from matplotlib.colors import LinearSegmentedColormap
-
+# matplotlib.use("agg")
 import os
 import sklearn
 from sklearn.decomposition import PCA
@@ -268,7 +269,7 @@ def FPS_calc(im_path,isSaveAll,save_dir,file,grouplist,HEADER,BGC,delt,N,MIN,SCA
     elif SCALE == 3:
         unit_conv = (SCALE_VALUE/scale_height)*(SCALE_VALUE/scale_height)
         contours.pop(scale_index)
-    draw_contours(gray,contours,file,save_dir)
+    # draw_contours(gray,contours,file,save_dir)  ## test
     Photo = im_path.split(os.sep)[-1].split(os.extsep)[0]
     len_contours = len(contours)
     INDEX_PIXEL = 0

@@ -1,31 +1,26 @@
 import sys
-from PyQt5 import QtCore as Qc, QtGui as Qg, QtWidgets as Qw   
-from PyQt5.QtCore import Qt, QThread, pyqtSignal
+from PyQt6 import QtCore as Qc, QtGui as Qg, QtWidgets as Qw   
+from PyQt6.QtCore import Qt, QThread, pyqtSignal
 import matplotlib
-matplotlib.use("Qt5Agg")
+matplotlib.use("agg")
 import os
 import re
 import glob
 import numpy as np
 from . import efa as ef
+# import efa as ef
 import pandas as pd
-import random
-import time
-from . import fgui as fpsGui                            
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from . import fgui as fpsGui 
+# import fgui as fpsGui                           
+# from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
+
 from matplotlib.figure import Figure
 from pathlib import Path
-from PyQt5.Qt import PYQT_VERSION_STR
+# from PyQt6.Qt import PYQT_VERSION_STR
 from datetime import datetime
 import matplotlib.animation as animation
 
-
-
-# print("Python: " + sys.version)
-# print("pandas ver. " + pd.__version__)
-# print("matplotlib ver. " + matplotlib.__version__)
-# print("numpy ver. " + np.__version__)
-# print("PyQt5 ver. " + PYQT_VERSION_STR)
 
 # Display pandas dataframe at QTableWidget
 class PandasModel(Qc.QAbstractTableModel): 
@@ -33,23 +28,23 @@ class PandasModel(Qc.QAbstractTableModel):
         Qc.QAbstractTableModel.__init__(self, parent=parent)
         self._df = df
 
-    def headerData(self, section, orientation, role=Qt.DisplayRole):
-        if role != Qt.DisplayRole:
+    def headerData(self, section, orientation, role=Qt.ItemDataRole.DisplayRole):
+        if role != Qt.ItemDataRole.DisplayRole:
             return Qc.QVariant()
 
-        if orientation == Qt.Horizontal:
+        if orientation == Qt.Orientation.Horizontal:
             try:
                 return self._df.columns.tolist()[section]
             except (IndexError, ):
                 return Qc.QVariant()
-        elif orientation == Qt.Vertical:
+        elif orientation == Qt.Orientation.Vertical:
             try:
                 return self._df.index.tolist()[section]
             except (IndexError, ):
                 return Qc.QVariant()
 
-    def data(self, index, role=Qt.DisplayRole):
-        if role != Qt.DisplayRole:
+    def data(self, index, role=Qt.ItemDataRole.DisplayRole):
+        if role != Qt.ItemDataRole.DisplayRole:
             return Qc.QVariant()
 
         if not index.isValid():
@@ -89,6 +84,7 @@ class FourierAnalyzer(QThread):
     countChanged = pyqtSignal(int)
     stringChanged = pyqtSignal(str)
     stringChangedPCA = pyqtSignal(str)
+    FourierDone = pyqtSignal(str)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -136,8 +132,15 @@ class FourierAnalyzer(QThread):
         # Log #--------------
         self.stringChanged.emit("\n"+"------------------ end."+"\n"+"In total "+str(TOTAL_CLAST)+" grains were detected"+"\n")
         # -------------------
-        self.parent.ui.textbox_fpsPath.setText(self.parent.SAVE_PATH)
-        self.parent.FPS_PATH = self.parent.SAVE_PATH
+        #######################################################
+        ###########   CHECK THIS ##############################
+        ######## Causative of segmentation error ##############
+        self.FourierDone.emit(self.parent.SAVE_PATH)
+        # self.parent.ui.textbox_fpsPath.setText(self.parent.SAVE_PATH) 
+        # self.parent.FPS_PATH = self.parent.SAVE_PATH
+        #######################################################
+        ######################################################
+        
         # self.parent.SAVE_PCA = self.parent.SAVE_PATH
         # self.parent.ui.textbox_pcaSave.setText(self.parent.SAVE_PCA)
 # Conduct FPS with an independent thread
@@ -296,10 +299,58 @@ class MyForm(Qw.QMainWindow):
         self.SCALE_UNIT = ""
         self.SCALE_VALUE = 1
         self.SCALE_POSITION = 0  #0: Top 1: Bottom 2: right 3: left
+        
+        # EFA threading
         self.fa = FourierAnalyzer(self)
         self.fa.countChanged.connect(self.onCountChanged)
         self.fa.stringChanged.connect(self.onStringChanged)
         self.fa.stringChangedPCA.connect(self.onStringChangedPCA)
+        self.fa.FourierDone.connect(self.onFourierDone)
+        
+        self.ui.cmb_format.currentIndexChanged.connect(self.setFormat) # type: ignore
+        self.ui.button_folda.clicked.connect(self.setFoldaPath) # type: ignore
+        self.ui.button_save.clicked.connect(self.setSavePath) # type: ignore
+        self.ui.cmb_sampleType.currentIndexChanged.connect(self.setBGC) # type: ignore
+        self.ui.spb_N.valueChanged.connect(self.setN) # type: ignore
+        self.ui.spb_mpxa.valueChanged.connect(self.setMPA) # type: ignore
+        self.ui.button_FPS.clicked.connect(self.startEFA) # type: ignore
+        self.ui.cmb_scaleType.currentIndexChanged.connect(self.setScaleType) # type: ignore
+        self.ui.textBox_scaleU.textEdited.connect(self.setScaleUnit) # type: ignore
+        self.ui.spb_scaleSize.valueChanged.connect(self.setScaleValue) # type: ignore
+        self.ui.cmb_scalePos.currentIndexChanged.connect(self.setScalePosition) # type: ignore
+        self.ui.button_header.clicked.connect(self.setHeaderName) # type: ignore
+        self.ui.button_FPSpath.clicked.connect(self.setFPSPath) # type: ignore
+        self.ui.button_savePCApath.clicked.connect(self.setSavePCAPath) # type: ignore
+        self.ui.cmb_matrixPCA.currentIndexChanged.connect(self.setPCAmatrix) # type: ignore
+        self.ui.button_PCA.clicked.connect(self.startPCA) # type: ignore
+        self.ui.cmb_x.currentIndexChanged.connect(self.setXaxis) # type: ignore
+        self.ui.cmb_y.currentIndexChanged.connect(self.setYaxis) # type: ignore
+        self.ui.cmb_color.currentIndexChanged.connect(self.setColor) # type: ignore
+        self.ui.pushButton.clicked.connect(self.graphDraw) # type: ignore
+        self.ui.pushButton_2.clicked.connect(self.savePCFig) # type: ignore
+        self.ui.cmb_sort.currentIndexChanged.connect(self.setSort) # type: ignore
+        self.ui.cmb_plot.currentIndexChanged.connect(self.setPlotType) # type: ignore
+        self.ui.cmb_recType.currentIndexChanged.connect(self.setReconstMode) # type: ignore
+        self.ui.cmb_sumDev.currentIndexChanged.connect(self.setSumDev) # type: ignore
+        self.ui.cmb_IP.currentIndexChanged.connect(self.setIPCaxis) # type: ignore
+        self.ui.cmb_IIP.currentIndexChanged.connect(self.setIIPCaxis) # type: ignore
+        self.ui.cmb_IIIP.currentIndexChanged.connect(self.setIIIPCaxis) # type: ignore
+        self.ui.dsb_Id.valueChanged.connect(self.setIdev) # type: ignore
+        self.ui.dsb_IId.valueChanged.connect(self.setIIdev) # type: ignore
+        self.ui.dsb_IIId.valueChanged.connect(self.setIIIdev) # type: ignore
+        self.ui.button_generate.clicked.connect(self.reconstGraph) # type: ignore
+        self.ui.button_saveReconst.clicked.connect(self.saveReconstGraph) # type: ignore
+        self.ui.cmb_FPS.currentIndexChanged.connect(self.setFPSorEFD) # type: ignore
+        self.ui.cmb_subcolor.currentIndexChanged.connect(self.setSubColor) # type: ignore
+        self.ui.cmb_subsort.currentIndexChanged.connect(self.setSubSort) # type: ignore
+        self.ui.cmb_subsubcolor.currentIndexChanged.connect(self.setSubsubColor) # type: ignore
+        self.ui.cmb_subsubsort.currentIndexChanged.connect(self.setSubsubSort) # type: ignore
+        self.ui.rb_none.toggled.connect(self.setCategorize) # type: ignore
+        self.ui.rb_subfolda.toggled.connect(self.setCategorize) # type: ignore
+        self.ui.rb_filename.toggled.connect(self.setCategorize) # type: ignore
+        self.ui.button_sample.clicked.connect(self.setSampleImage) # type: ignore
+        self.ui.button_startsample.clicked.connect(self.startPlayground) # type: ignore
+        self.ui.button_save_sample.clicked.connect(self.saveSample) # type: ignore
         self.setWindowTitle('Grain Shape analyzer')
         #PCA PAGE
         self.PCA_METHOD = ["Fourier Power Spectra","Amplitudes of X and Y ellipses","Elliptic Fourier Descriptors"]
@@ -308,14 +359,11 @@ class MyForm(Qw.QMainWindow):
         self.SAVE_PCA = ""
         self.isCorrelationMatrix = True
         #PC Graph
-        self.isAlreadyGraph = False
+        # self.isAlreadyGraph = False
         self.fig = Figure()
         self.ax1 = self.fig.add_subplot(111)
-        # self.ax1.set_xlabel("X")
-        # self.ax1.set_ylabel("Y")
-        # self.ax1 = self.fig.add_subplot(111)
         self.canv = FigureCanvas(self.fig)
-        self.canv.setSizePolicy(Qw.QSizePolicy.Expanding, Qw.QSizePolicy.Expanding)
+        self.canv.setSizePolicy(Qw.QSizePolicy.Policy.Expanding, Qw.QSizePolicy.Policy.Expanding)
         self.canv.updateGeometry()
         self.layout = Qw.QGridLayout(self.ui.canvas)
         self.layout.addWidget(self.canv)
@@ -349,9 +397,9 @@ class MyForm(Qw.QMainWindow):
         self.canv11 = FigureCanvas(self.fig11); self.canv12 = FigureCanvas(self.fig12); self.canv13 = FigureCanvas(self.fig13);
         self.canv21 = FigureCanvas(self.fig21); self.canv22 = FigureCanvas(self.fig22); self.canv23 = FigureCanvas(self.fig23);
         self.canv31 = FigureCanvas(self.fig31); self.canv32 = FigureCanvas(self.fig32); self.canv33 = FigureCanvas(self.fig33);
-        self.canv11.setSizePolicy(Qw.QSizePolicy.Expanding, Qw.QSizePolicy.Expanding); self.canv12.setSizePolicy(Qw.QSizePolicy.Expanding, Qw.QSizePolicy.Expanding); self.canv13.setSizePolicy(Qw.QSizePolicy.Expanding, Qw.QSizePolicy.Expanding); 
-        self.canv21.setSizePolicy(Qw.QSizePolicy.Expanding, Qw.QSizePolicy.Expanding); self.canv22.setSizePolicy(Qw.QSizePolicy.Expanding, Qw.QSizePolicy.Expanding); self.canv23.setSizePolicy(Qw.QSizePolicy.Expanding, Qw.QSizePolicy.Expanding); 
-        self.canv31.setSizePolicy(Qw.QSizePolicy.Expanding, Qw.QSizePolicy.Expanding); self.canv32.setSizePolicy(Qw.QSizePolicy.Expanding, Qw.QSizePolicy.Expanding); self.canv33.setSizePolicy(Qw.QSizePolicy.Expanding, Qw.QSizePolicy.Expanding); 
+        self.canv11.setSizePolicy(Qw.QSizePolicy.Policy.Expanding, Qw.QSizePolicy.Policy.Expanding); self.canv12.setSizePolicy(Qw.QSizePolicy.Policy.Expanding, Qw.QSizePolicy.Policy.Expanding); self.canv13.setSizePolicy(Qw.QSizePolicy.Policy.Expanding, Qw.QSizePolicy.Policy.Expanding); 
+        self.canv21.setSizePolicy(Qw.QSizePolicy.Policy.Expanding, Qw.QSizePolicy.Policy.Expanding); self.canv22.setSizePolicy(Qw.QSizePolicy.Policy.Expanding, Qw.QSizePolicy.Policy.Expanding); self.canv23.setSizePolicy(Qw.QSizePolicy.Policy.Expanding, Qw.QSizePolicy.Policy.Expanding); 
+        self.canv31.setSizePolicy(Qw.QSizePolicy.Policy.Expanding, Qw.QSizePolicy.Policy.Expanding); self.canv32.setSizePolicy(Qw.QSizePolicy.Policy.Expanding, Qw.QSizePolicy.Policy.Expanding); self.canv33.setSizePolicy(Qw.QSizePolicy.Policy.Expanding, Qw.QSizePolicy.Policy.Expanding); 
         self.canv11.updateGeometry(); self.canv12.updateGeometry(); self.canv13.updateGeometry();
         self.canv21.updateGeometry(); self.canv22.updateGeometry(); self.canv23.updateGeometry();
         self.canv31.updateGeometry(); self.canv32.updateGeometry(); self.canv33.updateGeometry();
@@ -379,7 +427,7 @@ class MyForm(Qw.QMainWindow):
         self.axss.tick_params(labelleft=False,left=False);
         self.axss.set_xticklabels([]);self.axss.set_yticklabels([]);
         self.canvss = FigureCanvas(self.figss);
-        self.canvss.setSizePolicy(Qw.QSizePolicy.Expanding, Qw.QSizePolicy.Expanding);
+        self.canvss.setSizePolicy(Qw.QSizePolicy.Policy.Expanding, Qw.QSizePolicy.Policy.Expanding);
         self.canvss.updateGeometry();
         self.layout_ss.addWidget(self.canvss,0,0);
 
@@ -392,7 +440,7 @@ class MyForm(Qw.QMainWindow):
         self.ax_px.tick_params(labelleft=False,left=False);
         self.ax_px.set_xticklabels([]);self.ax_px.set_yticklabels([]);
         self.canvpx = FigureCanvas(self.figpx);
-        self.canvpx.setSizePolicy(Qw.QSizePolicy.Expanding, Qw.QSizePolicy.Expanding);
+        self.canvpx.setSizePolicy(Qw.QSizePolicy.Policy.Expanding, Qw.QSizePolicy.Policy.Expanding);
         self.canvpx.updateGeometry();
         self.layout_px.addWidget(self.canvpx,0,0);
 
@@ -404,7 +452,7 @@ class MyForm(Qw.QMainWindow):
         self.ax_py.tick_params(labelleft=False,left=False);
         self.ax_py.set_xticklabels([]);self.ax_py.set_yticklabels([]);
         self.canvpy = FigureCanvas(self.figpy);
-        self.canvpy.setSizePolicy(Qw.QSizePolicy.Expanding, Qw.QSizePolicy.Expanding);
+        self.canvpy.setSizePolicy(Qw.QSizePolicy.Policy.Expanding, Qw.QSizePolicy.Policy.Expanding);
         self.canvpy.updateGeometry();
         self.layout_py.addWidget(self.canvpy,0,0);
 
@@ -413,7 +461,7 @@ class MyForm(Qw.QMainWindow):
         self.figx = Figure();
         self.ax_x = self.figx.add_subplot(111);
         self.canvx = FigureCanvas(self.figx);
-        self.canvx.setSizePolicy(Qw.QSizePolicy.Expanding, Qw.QSizePolicy.Expanding);
+        self.canvx.setSizePolicy(Qw.QSizePolicy.Policy.Expanding, Qw.QSizePolicy.Policy.Expanding);
         self.canvx.updateGeometry();
         self.layout_x.addWidget(self.canvx,0,0);
 
@@ -421,7 +469,7 @@ class MyForm(Qw.QMainWindow):
         self.figy = Figure();
         self.ax_y = self.figy.add_subplot(111);
         self.canvy = FigureCanvas(self.figy);
-        self.canvy.setSizePolicy(Qw.QSizePolicy.Expanding, Qw.QSizePolicy.Expanding);
+        self.canvy.setSizePolicy(Qw.QSizePolicy.Policy.Expanding, Qw.QSizePolicy.Policy.Expanding);
         self.canvy.updateGeometry();
         self.layout_y.addWidget(self.canvy,0,0);
 
@@ -436,7 +484,7 @@ class MyForm(Qw.QMainWindow):
         # self.ax_rre.axis('off')
         self.ax_rre.set_xticklabels([]);self.ax_rre.set_yticklabels([]);
         self.canv_rre = FigureCanvas(self.fig_rre);
-        self.canv_rre.setSizePolicy(Qw.QSizePolicy.Expanding, Qw.QSizePolicy.Expanding);
+        self.canv_rre.setSizePolicy(Qw.QSizePolicy.Policy.Expanding, Qw.QSizePolicy.Policy.Expanding);
         self.canv_rre.updateGeometry();
         self.layout_rre.addWidget(self.canv_rre,0,0);
 
@@ -450,7 +498,7 @@ class MyForm(Qw.QMainWindow):
         # self.ax_rcom.axis('off')
         self.ax_rcom.set_xticklabels([]);self.ax_rcom.set_yticklabels([]);
         self.canv_rcom = FigureCanvas(self.fig_rcom);
-        self.canv_rcom.setSizePolicy(Qw.QSizePolicy.Expanding, Qw.QSizePolicy.Expanding);
+        self.canv_rcom.setSizePolicy(Qw.QSizePolicy.Policy.Expanding, Qw.QSizePolicy.Policy.Expanding);
         self.canv_rcom.updateGeometry();
         self.layout_rcom.addWidget(self.canv_rcom,0,0);
         self.ui.tabWidget_2.setCurrentIndex(1);
@@ -595,9 +643,6 @@ class MyForm(Qw.QMainWindow):
             self.ga.start()
         elif self.ui.tabWidget_2.currentIndex() == 3:
             self.gah.start()
-        
-    
-    
     
     def projection(self,frame):
         self.figpx.canvas.draw_idle();
@@ -663,38 +708,55 @@ class MyForm(Qw.QMainWindow):
             ax_seq.set_title(r"${\it N}\ =\ $"+num)
             fig.savefig(sequence_name+"seq_"+num+".pdf")
             matplotlib.pyplot.close()
-            # figc,bx_seq= matplotlib.pyplot.subplots()
-            # bx_seq.set_aspect('equal', 'datalim');
-            # bx_seq.plot(self.x_pa_ori,self.y_pa_ori,color='black',alpha=1.0)
-            # bx_seq.fill(self.x_pa_ori,self.y_pa_ori,color='black',alpha=0.5)
-            # x_Na,y_Na = ef.adjustXYCoord(self.N_list[i][0],self.N_list[i][1])
-            # bx_seq.plot(x_Na,-y_Na,color='red',alpha=0.7)
-            # bx_seq.set_title(r"${\it N}\ =\ $"+num)
-            # figc.savefig(sequence_name+"comp"+os.sep+"seq_"+num+"_c.png")
-            
+    
+    def getImagesFromFolder(self):
+        self.FILE_LIST = []
+        # Log #--------------
+        File_log_str = "Folda Path: " + self.FOLDA_DIR +"\n"
+        # -------------------
+        if self.FOLDA_DIR=="":
+            return
+        else:
+            # Log #--------------
+            File_log_str += "#------------------" + "\n" + "Selected Files" + "\n" + "#------------------" + "\n"
+            # -------------------
+            for file in glob.glob(self.FOLDA_DIR+os.sep+"**",recursive=True):
+                index = re.search(self.FILE_FORMAT,file)
+                # iscontdir = re.search('contdir',file)
+                if index:
+                    self.FILE_LIST.append(file[len(self.FOLDA_DIR)+1:-1*len(self.FILE_FORMAT)])
+                    # Log #--------------
+                    File_log_str += "          • " + file[len(self.FOLDA_DIR)+1:-1*len(self.FILE_FORMAT)] + "\n"
+                    # -------------------
+            # Log #--------------
+            File_log_str += "In total: " + str(len(self.FILE_LIST)) +" " + self.FILE_FORMAT + " files" + "\n"
+            self.onStringChanged(File_log_str)
+            # -------------------
+    
     #### Set image format PNG, BMP, JPEG
     def setFormat(self):
         
         self.FILE_FORMAT = self.FORMAT_LIST[self.ui.cmb_format.currentIndex()]
-        self.FILE_LIST = [] # Initiate image file list for analysis
+        self.getImagesFromFolder()
+        # self.FILE_LIST = [] # Initiate image file list for analysis
 
-        if self.FOLDA_DIR=="":
-            # Log #--------------
-            self.onStringChanged("Format: "+self.FILE_FORMAT+"\n"+"Select the Folda Directory"+"\n")
-            # -------------------
-        else:
-            files = os.listdir(self.FOLDA_DIR) # All File in selected directory 
-            File_log_str = ""
-            for file in files:
-                index = re.search(self.FILE_FORMAT,file) # Search the image files with the selected format
-                if index:
-                    self.FILE_LIST.append(file[0:-1*len(self.FILE_FORMAT)]) # add image to analyze
-                    # Log #--------------
-                    File_log_str += "          • " + file[0:-1*len(self.FILE_FORMAT)] + "\n"
-                    # -------------------
-            # Log #--------------
-            self.onStringChanged("#------------------"+"\n"+"Selected Files"+"\n"+"#------------------"+"\n"+File_log_str+"In total: " + str(len(self.FILE_LIST)) +" " + self.FILE_FORMAT + " files" + "\n")
-            # -------------------
+        # if self.FOLDA_DIR=="":
+        #     # Log #--------------
+        #     self.onStringChanged("Format: "+self.FILE_FORMAT+"\n"+"Select the Folda Directory"+"\n")
+        #     # -------------------
+        # else:
+        #     files = os.listdir(self.FOLDA_DIR) # All File in selected directory 
+        #     File_log_str = ""
+        #     for file in files:
+        #         index = re.search(self.FILE_FORMAT,file) # Search the image files with the selected format
+        #         if index:
+        #             self.FILE_LIST.append(file[0:-1*len(self.FILE_FORMAT)]) # add image to analyze
+        #             # Log #--------------
+        #             File_log_str += "          • " + file[0:-1*len(self.FILE_FORMAT)] + "\n"
+        #             # -------------------
+        #     # Log #--------------
+        #     self.onStringChanged("#------------------"+"\n"+"Selected Files"+"\n"+"#------------------"+"\n"+File_log_str+"In total: " + str(len(self.FILE_LIST)) +" " + self.FILE_FORMAT + " files" + "\n")
+        #     # -------------------
 
     #### Set categorization method #####
     def setCategorize(self):
@@ -715,59 +777,34 @@ class MyForm(Qw.QMainWindow):
             self.categorization = 2
 
     def setFoldaPath(self):
-        self.FILE_LIST = []
+        # self.FILE_LIST = []
         # select Folda
         rootpath = os.path.abspath(os.path.dirname("__file__"))
         self.FOLDA_DIR = Qw.QFileDialog.getExistingDirectory(None,"rootpath",rootpath)
-        # Log #--------------
-        File_log_str = "Folda Path: " + self.FOLDA_DIR +"\n"
-        # -------------------
+        # # Log #--------------
+        # File_log_str = "Folda Path: " + self.FOLDA_DIR +"\n"
+        # # -------------------
         self.ui.line_folda.setText(self.FOLDA_DIR)
-        if self.FOLDA_DIR=="":
-            return
-        else:
-            # Log #--------------
-            File_log_str += "#------------------" + "\n" + "Selected Files" + "\n" + "#------------------" + "\n"
-            # -------------------
-            for file in glob.glob(self.FOLDA_DIR+os.sep+"**",recursive=True):
-                index = re.search(self.FILE_FORMAT,file)
-                # iscontdir = re.search('contdir',file)
-                if index:
-                    self.FILE_LIST.append(file[len(self.FOLDA_DIR)+1:-1*len(self.FILE_FORMAT)])
-                    # Log #--------------
-                    File_log_str += "          • " + file[len(self.FOLDA_DIR)+1:-1*len(self.FILE_FORMAT)] + "\n"
-                    # -------------------
-            # Log #--------------
-            File_log_str += "In total: " + str(len(self.FILE_LIST)) +" " + self.FILE_FORMAT + " files" + "\n"
-            self.onStringChanged(File_log_str)
-            # -------------------
-    #### Set image format PNG, BMP, JPEG
-    # def setFoldaPath(self):
-    #     self.FILE_LIST = []
-    #     rootpath = os.path.abspath(os.path.dirname("__file__"))
-    #     self.FOLDA_DIR = Qw.QFileDialog.getExistingDirectory(None,"rootpath",rootpath)
-    #     # Log #--------------
-    #     File_log_str = "Folda Path: " + self.FOLDA_DIR +"\n"
-    #     # -------------------
-    #     self.ui.line_folda.setText(self.FOLDA_DIR)
-    #     if self.FOLDA_DIR=="":
-    #         return
-    #     else:
-    #         files = os.listdir(self.FOLDA_DIR)
-    #         # Log #--------------
-    #         File_log_str += "#------------------" + "\n" + "Selected Files" + "\n" + "#------------------" + "\n"
-    #         # -------------------
-    #         for file in files:
-    #             index = re.search(self.FILE_FORMAT,file)
-    #             if index:
-    #                 self.FILE_LIST.append(file[0:-1*len(self.FILE_FORMAT)])
-    #                 # Log #--------------
-    #                 File_log_str += "          • " + file[0:-1*len(self.FILE_FORMAT)] + "\n"
-    #                 # -------------------
-    #         # Log #--------------
-    #         File_log_str += "In total: " + str(len(self.FILE_LIST)) +" " + self.FILE_FORMAT + " files" + "\n"
-    #         self.onStringChanged(File_log_str)
-    #         # -------------------
+        self.getImagesFromFolder()
+        # if self.FOLDA_DIR=="":
+        #     return
+        # else:
+        #     # Log #--------------
+        #     File_log_str += "#------------------" + "\n" + "Selected Files" + "\n" + "#------------------" + "\n"
+        #     # -------------------
+        #     for file in glob.glob(self.FOLDA_DIR+os.sep+"**",recursive=True):
+        #         index = re.search(self.FILE_FORMAT,file)
+        #         # iscontdir = re.search('contdir',file)
+        #         if index:
+        #             self.FILE_LIST.append(file[len(self.FOLDA_DIR)+1:-1*len(self.FILE_FORMAT)])
+        #             # Log #--------------
+        #             File_log_str += "          • " + file[len(self.FOLDA_DIR)+1:-1*len(self.FILE_FORMAT)] + "\n"
+        #             # -------------------
+        #     # Log #--------------
+        #     File_log_str += "In total: " + str(len(self.FILE_LIST)) +" " + self.FILE_FORMAT + " files" + "\n"
+        #     self.onStringChanged(File_log_str)
+        #     # -------------------
+  
 
     def setHeaderName(self):
         headername = self.ui.line_header.text()
@@ -811,41 +848,6 @@ class MyForm(Qw.QMainWindow):
                 File_log_str += "ERROR: check following file name" + "\n" + File_log_str_error + "\n"
                 File_log_str += "</span>" + "\n"
                 self.onStringChanged(File_log_str)
-
-    # def setHeaderName(self):
-    #     headername = self.ui.line_header.text()
-    #     File_log_str = ""
-    #     File_log_str_error = ""
-    #     if headername == "":
-    #         # Log #--------------
-    #         File_log_str += "Please enter the header name" +"\n"
-    #         self.onStringChanged(File_log_str)
-    #         # -------------------
-    #     elif len(self.FILE_LIST) == 0:
-    #         # Log #--------------
-    #         File_log_str += "Please select file directory first" + "\n"
-    #         self.onStringChanged(File_log_str)
-    #         # -------------------
-    #     else:
-    #         Header_cand = headername.split('_')
-    #         gnum = len(Header_cand) 
-    #         file_contens = True
-    #         for file in self.FILE_LIST:
-    #             if len(file.split('_')) != gnum:
-    #                 file_contens = False
-    #                 # Log #--------------
-    #                 File_log_str_error += str(file) + "\n"
-    #                 # -------------------
-    #         if file_contens:
-    #             self.HEADER_LIST = headername.split('_')
-    #             # Log #--------------
-    #             File_log_str += "Header is assigned." + "\n"
-    #             self.onStringChanged(File_log_str)
-    #             # -------------------
-    #         else:
-    #             File_log_str += "ERROR: check following file name" + "\n" + File_log_str_error + "\n"
-    #             self.onStringChanged(File_log_str)
-
             
     def setSavePath(self):
         rootpath = os.path.abspath(os.path.dirname("__file__"))
@@ -947,7 +949,8 @@ class MyForm(Qw.QMainWindow):
         date_log += "</span>" + "\n"
         self.ui.logbox.append(date_log)
         self.ui.logbox.append(str(value))
-        self.ui.logbox.moveCursor(Qg.QTextCursor.End)
+        self.ui.logbox.moveCursor(Qg.QTextCursor.MoveOperation.End)
+        # self.ui.logbox.moveCursor(self.ui.logbox.textCursor().End)
         #-------------------
 
     def onStringChangedPCA(self,value):
@@ -957,9 +960,13 @@ class MyForm(Qw.QMainWindow):
         date_log += "</span>" + "\n"
         self.ui.logbox_pca.append(date_log)
         self.ui.logbox_pca.append(str(value))
-        self.ui.logbox_pca.moveCursor(Qg.QTextCursor.End)
+        self.ui.logbox_pca.moveCursor(Qg.QTextCursor.MoveOperation.End)
         #-------------------
 
+    def onFourierDone(self,path):
+        self.ui.textbox_fpsPath.setText(path) 
+        self.FPS_PATH = path
+    
     def startEFA(self):
         #INITIAL SETTING
         self.FOLDA_DIR = self.ui.line_folda.text()
@@ -979,19 +986,12 @@ class MyForm(Qw.QMainWindow):
             self.ui.progressBar.setMaximum(len(self.FILE_LIST))
             self.update()
             self.onStringChanged(File_log_str)
-            # self.fa.countChanged.connect(self.onCountChanged)
-            # self.fa.stringChanged.connect(self.onStringChanged)
-            # self.fa.stringChangedPCA.connect(self.onStringChangedPCA)
             self.fa.start()
 
     # PCA methods ########################
     def setFPSorEFD(self):
         self.isFPS = self.ui.cmb_FPS.currentIndex()
-        # print(self.ui.cmb_FPS.currentIndex())
-        # if  == 0:
-        #     self.isFPS = 0
-        # elif:
-        #     self.isFPS = False
+        
 
     def setFPSPath(self):
         path = self.openCSVFile()
@@ -1515,15 +1515,6 @@ class MyForm(Qw.QMainWindow):
 
             for i in range(20):
                 if self.isFPS !=2: # FPS or AMp
-                    # pd.DataFrame({"x":ef.reconstContourCoord(self.N,fps1,self.isFPS)[0],"y":ef.reconstContourCoord(self.N,fps1,self.isFPS)[1]}).plot(kind="line",x="x", y="y",c=[[random.random(),random.random(),random.random()]], ax=self.ax11)#,s=0.5)
-                    # pd.DataFrame({"x":ef.reconstContourCoord(self.N,fps2,self.isFPS)[0],"y":ef.reconstContourCoord(self.N,fps2,self.isFPS)[1]}).plot(kind="line",x="x", y="y",c=[[random.random(),random.random(),random.random()]], ax=self.ax12)#,s=0.5)
-                    # pd.DataFrame({"x":ef.reconstContourCoord(self.N,fps3,self.isFPS)[0],"y":ef.reconstContourCoord(self.N,fps3,self.isFPS)[1]}).plot(kind="line",x="x", y="y",c=[[random.random(),random.random(),random.random()]], ax=self.ax13)#,s=0.5)
-                    # pd.DataFrame({"x":ef.reconstContourCoord(self.N,fps4,self.isFPS)[0],"y":ef.reconstContourCoord(self.N,fps4,self.isFPS)[1]}).plot(kind="line",x="x", y="y",c=[[random.random(),random.random(),random.random()]], ax=self.ax21)#,s=0.5)
-                    # pd.DataFrame({"x":ef.reconstContourCoord(self.N,fps5,self.isFPS)[0],"y":ef.reconstContourCoord(self.N,fps5,self.isFPS)[1]}).plot(kind="line",x="x", y="y",c=[[random.random(),random.random(),random.random()]], ax=self.ax22)#,s=0.5)
-                    # pd.DataFrame({"x":ef.reconstContourCoord(self.N,fps6,self.isFPS)[0],"y":ef.reconstContourCoord(self.N,fps6,self.isFPS)[1]}).plot(kind="line",x="x", y="y",c=[[random.random(),random.random(),random.random()]], ax=self.ax23)#,s=0.5)
-                    # pd.DataFrame({"x":ef.reconstContourCoord(self.N,fps7,self.isFPS)[0],"y":ef.reconstContourCoord(self.N,fps7,self.isFPS)[1]}).plot(kind="line",x="x", y="y",c=[[random.random(),random.random(),random.random()]], ax=self.ax31)#,s=0.5)
-                    # pd.DataFrame({"x":ef.reconstContourCoord(self.N,fps8,self.isFPS)[0],"y":ef.reconstContourCoord(self.N,fps8,self.isFPS)[1]}).plot(kind="line",x="x", y="y",c=[[random.random(),random.random(),random.random()]], ax=self.ax32)#,s=0.5)
-                    # pd.DataFrame({"x":ef.reconstContourCoord(self.N,fps9,self.isFPS)[0],"y":ef.reconstContourCoord(self.N,fps9,self.isFPS)[1]}).plot(kind="line",x="x", y="y",c=[[random.random(),random.random(),random.random()]], ax=self.ax33)#,s=0.5)
                     pd.DataFrame({"x":ef.reconstContourCoord(self.N,fps1,self.isFPS)[0],"y":ef.reconstContourCoord(self.N,fps1,self.isFPS)[1]}).plot(kind="line",x="x", y="y",c=np.random.rand(3,), ax=self.ax11)#,s=0.5)
                     pd.DataFrame({"x":ef.reconstContourCoord(self.N,fps2,self.isFPS)[0],"y":ef.reconstContourCoord(self.N,fps2,self.isFPS)[1]}).plot(kind="line",x="x", y="y",c=np.random.rand(3,), ax=self.ax12)#,s=0.5)
                     pd.DataFrame({"x":ef.reconstContourCoord(self.N,fps3,self.isFPS)[0],"y":ef.reconstContourCoord(self.N,fps3,self.isFPS)[1]}).plot(kind="line",x="x", y="y",c=np.random.rand(3,), ax=self.ax13)#,s=0.5)
@@ -1621,14 +1612,8 @@ class MyForm(Qw.QMainWindow):
         self.fig32.savefig(file_name+"fig_32.pdf",bbox_inches='tight')
         self.fig33.savefig(file_name+"fig_33.pdf",bbox_inches='tight')
    
-def buildGUI(argv=sys.argv[1:]):
-    print("Python: " + sys.version)
-    print("pandas ver. " + pd.__version__)
-    print("matplotlib ver. " + matplotlib.__version__)
-    print("numpy ver. " + np.__version__)
-    print("PyQt5 ver. " + PYQT_VERSION_STR)
+def buildGUI():
     app = Qw.QApplication(sys.argv)         
     wmain = MyForm()                        
     wmain.show()                            
-    sys.exit(app.exec_())
-
+    sys.exit(app.exec())
