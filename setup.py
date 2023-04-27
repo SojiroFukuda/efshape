@@ -19,7 +19,7 @@ version = next((line.split('=')[1].strip().replace("'", '')
                 for line in open(os.path.join(here,
                                               'efshape',
                                               '__init__.py'))
-                if line.startswith('__version__ = ')),'0.0.5')
+                if line.startswith('__version__ = ')),'0.1.0')
 
 
 setup(
@@ -35,7 +35,7 @@ setup(
     packages=find_packages(),
     install_requires=[
 #         "sys >= 3.7.3",
-        "PyQt5 >= 5.7.0",
+        "PyQt6 >= 6.4.2",
         "numpy >= 1.16.0",
         "pandas >= 0.24.0",
         "matplotlib >= 3.0.0",
