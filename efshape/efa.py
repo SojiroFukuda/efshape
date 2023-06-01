@@ -1,24 +1,30 @@
+""" Python for elliptic-Fourier and Principal Component Analysis.
+    efa.py provides various methods to analyse closed contours in your images.
+"""
+
 import cv2
 import numpy as np
-from scipy.optimize import curve_fit
 from scipy.interpolate import interp1d
-
 import pandas as pd
-import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle, Polygon, Rectangle
 from matplotlib.colors import LinearSegmentedColormap
-# matplotlib.use("agg")
 import os
-import sklearn
 from sklearn.decomposition import PCA
 import random
 import scipy.stats as st
 
-# print("OpenCV: " + cv2.__version__)
 
-#cnt = [ (x0,y0),(x1,y1),......]
-def convShape2func(cnt):
+def convShape2func(cnt:np.ndarray):
+    """_summary_
+
+    Args:
+        cnt (np.ndarray): a contour data detected by findContours() from openCV.
+
+    Returns:
+        dt (np.ndarray): length along the countour between each coordinate.
+        cum (np.ndarray): cumlative length of dt
+    """
     dt = np.zeros( len( cnt ) - 1 ) # length along the countour between each coordinate.
     cum = np.zeros( len( cnt ) ) # cumlative length of dt.
     cum[0] = 0
@@ -609,6 +615,39 @@ def reconstContourCoord(N,fps,isFPS):
         np.append(x_t,x_t[0])
         np.append(y_t,y_t[0])
     return x_t, y_t, efd_list
+
+
+def find_index(lst, value):
+    for index, element in enumerate(lst):
+        if element == value:
+            return index
+    return -1  
+
+def create_random_contour(N: int, indexes: list,factors: list,base_factor: float=100,base_amp_ratio: float=100, isFPS:int = 0):
+    
+    fps = np.random.rand(N)
+    for i, value in enumerate(fps):
+        if i in indexes:
+            ind_factor = find_index(indexes,i)
+            if i == 0:
+                fps[i] = 1 + factors[ind_factor]*np.random.rand()
+            else:
+                fps[i] = factors[ind_factor]*np.random.rand()
+        else:
+            fps[i] = fps[i]/(base_amp_ratio*np.power(10,base_factor*np.random.rand()))
+    x, y, t = reconstContourCoord(N,fps,isFPS)
+    return x, y, t
+
+def grid(row: int,col: int, x_interval: float,y_interval: float) -> tuple:
+    grid_x = (np.arange(row*col) % col) * x_interval
+    grid_x_2d = np.reshape(grid_x,(row,col))
+    
+    grid_y = np.ones((row,col))
+    yrow = np.arange(row) * y_interval
+    grid_y_2d = grid_y.T * yrow
+    grid_y_2d = grid_y_2d.T
+    
+    return (grid_x_2d, grid_y_2d)
 
 def conductPCA_correlation(csv_path,isFPS,isCor):
     df = pd.read_csv(csv_path)
