@@ -7,20 +7,18 @@ import os
 import re
 import glob
 import numpy as np
-from . import efa as ef
-# import efa as ef
-import pandas as pd
-from . import fgui as fpsGui 
-# import fgui as fpsGui                           
-# from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+import pandas as pd                         
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
-
 from matplotlib.figure import Figure
 from pathlib import Path
-# from PyQt6.Qt import PYQT_VERSION_STR
 from datetime import datetime
 import matplotlib.animation as animation
-
+# For distribution
+from . import efa as ef
+from . import fgui as fpsGui 
+# # FOR DEVELOPER
+# import efa as ef
+# import fgui as fpsGui  
 
 # Display pandas dataframe at QTableWidget
 class PandasModel(Qc.QAbstractTableModel): 

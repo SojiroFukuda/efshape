@@ -15,7 +15,7 @@ import random
 import scipy.stats as st
 
 
-def convShape2func(cnt:np.ndarray):
+def convShape2func(cnt:np.ndarray) -> tuple[np.ndarray,np.ndarray]:
     """_summary_
 
     Args:
@@ -33,7 +33,15 @@ def convShape2func(cnt:np.ndarray):
         cum[i+1] = cum[i] + dt[i]
     return dt, cum
 
-def getXYCoord(cnt):
+def getXYCoord(cnt:np.ndarray) -> tuple[np.ndarray,np.ndarray]:
+    """convert the contour object (which is np.ndarray) into a set of 1-D array in terms of x and y coordinates respectively. 
+
+    Args:
+        cnt (np.ndarray): Numpy array obtained from the cv2.findContours().
+
+    Returns:
+        x_t, y_t: a set of 1-D array.
+    """
     length = len(cnt)
     x_t = np.zeros(length)
     y_t = np.zeros(length)
@@ -42,7 +50,16 @@ def getXYCoord(cnt):
         y_t[i] = cnt[i][0][1]
     return x_t,y_t
 
-def adjustXYCoord(x,y):
+def adjustXYCoord(x:np.ndarray,y:np.ndarray) -> tuple[np.ndarray,np.ndarray]:
+    """translate the contour so that the centre of the contour becomes the origin of the coordinate.
+
+    Args:
+        x (np.ndarray): original X-coordinates of the contour
+        y (np.ndarray): original Y-coordinates of the contour
+
+    Returns:
+        tuple[np.ndarray,np.ndarray]: Numpy 1-D arrays of the translated X,Y coodinates.
+    """
     x_min = min(x)
     x_max = max(x)
     y_min = min(y)
@@ -658,17 +675,18 @@ def conductPCA_correlation(csv_path,isFPS,isCor):
     # take log FPS2–N 
     df.iloc[:,( FPS_loc + 1 ): (FPS_loc + N )] = -1*np.log(df.iloc[:,( FPS_loc + 1 ):(FPS_loc + N )])
     df.iloc[:,( FPS_loc + 5*N + 1 ):] = -1*np.log(df.iloc[:,( FPS_loc + 5*N + 1 ):])
-    # df.iloc[:,( FPS_loc + 1 ): (FPS_loc + N )] = np.log(df.iloc[:,( FPS_loc + 1 ):(FPS_loc + N )])  #### koko
-    # df.iloc[:,( FPS_loc + N + 4 ):] = -1*np.log(1+df.iloc[:,( FPS_loc + N + 4 ):])
+    
     if isFPS == 0: # FPS
-        scale_array = np.std(df.iloc[:,(FPS_loc):(FPS_loc + N )])
-        center_array= np.mean(df.iloc[:,(FPS_loc):(FPS_loc + N )])
+        scale_array = np.std(df.iloc[:,(FPS_loc):(FPS_loc + N )],axis=0)
+        center_array= np.mean(df.iloc[:,(FPS_loc):(FPS_loc + N )],axis=0)
     elif isFPS == 2: # EFD
-        scale_array = np.std(df.iloc[:,(FPS_loc + N):(FPS_loc + 5*N)])
-        center_array= np.mean(df.iloc[:,(FPS_loc + N):(FPS_loc + 5*N)])
+        scale_array = np.std(df.iloc[:,(FPS_loc + N):(FPS_loc + 5*N)],axis=0)
+        center_array= np.mean(df.iloc[:,(FPS_loc + N):(FPS_loc + 5*N)],axis=0)
     else: # AMp
-        scale_array = np.std(df.iloc[:,(FPS_loc + 5*N):])
-        center_array= np.mean(df.iloc[:,(FPS_loc + 5*N):])
+        scale_array = np.std(df.iloc[:,(FPS_loc + 5*N):],axis=0)
+        center_array= np.mean(df.iloc[:,(FPS_loc + 5*N):],axis=0)
+    
+    
     # Correlation Matrix
     # print(isFPS)
     if isFPS == 0:
@@ -714,11 +732,12 @@ def conductPCA_correlation(csv_path,isFPS,isCor):
     rot_array = np.reshape(rot_data,(csv_rot.shape[0],csv_rot.shape[1]))
     rot_mat = np.matrix(rot_array).astype(np.float64)
     inv_rot = np.linalg.inv(rot_mat) #inverse matrix of the rotation.
+    
     #Scale Mat
     scale_data = np.array(scale_array.values.flatten())
     #Center Mat
     center_data = np.array(center_array.values.flatten())
-
+    
     if isFPS == 0: # FPS    
         scale_mat = np.diag(np.reshape(scale_data.astype(np.float64),N))
         center_mat = np.reshape(center_data.astype(np.float64),N)
