@@ -708,7 +708,6 @@ def conductPCA_correlation(csv_path,isFPS,isCor):
     pca = PCA()
     feature = pca.fit(dfs)
     feature = pca.transform(dfs)
-    dfs.to_csv("test.csv")
     PC_SCORE = pd.DataFrame(feature, columns=["PC{}".format(x + 1) for x in range(len(dfs.columns))])
     result_df = pd.concat([df,PC_SCORE],axis=1)
 
