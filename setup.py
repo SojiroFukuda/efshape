@@ -17,9 +17,9 @@ def _requires_from_file(filename):
 here = os.path.dirname(os.path.abspath(__file__))
 version = next((line.split('=')[1].strip().replace("'", '')
                 for line in open(os.path.join(here,
-                                              'efshape',
-                                              '__init__.py'))
-                if line.startswith('__version__ = ')),'1.0.0')
+                                            'efshape',
+                                            '__init__.py'))
+                if line.startswith('__version__ = ')),'1.2.0')
 
 
 setup(
@@ -34,7 +34,6 @@ setup(
     long_description=readme,
     packages=find_packages(),
     install_requires=[
-#         "sys >= 3.7.3",
         "PyQt6 >= 6.4.2",
         "numpy >= 1.16.0",
         "pandas >= 0.24.0",
@@ -52,8 +51,8 @@ setup(
         'Programming Language :: Python :: 3.4',
     ],
     entry_points="""
-      # -*- Entry points: -*-
-      [console_scripts]
-      efshape = sviewgui.sview.command:buildGUI
+    # -*- Entry points: -*-
+    [console_scripts]
+    efshape = sviewgui.sview.command:buildGUI
     """,
 )
