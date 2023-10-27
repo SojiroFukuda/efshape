@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: efshape
-Version: 1.2.1
+Version: 1.2.2
 Summary: Package Dependency: Validates package requirements
 Home-page: https://github.com/SojiroFukuda/efshape
 Author: SojiroFukuda
@@ -12,9 +12,9 @@ Classifier: Programming Language :: Python :: 3
 Classifier: Programming Language :: Python :: 3.3
 Classifier: Programming Language :: Python :: 3.4
 Requires-Dist: PyQt6>=6.4.2
-Requires-Dist: numpy>=1.16.0
-Requires-Dist: pandas>=0.24.0
-Requires-Dist: matplotlib>=3.0.0
+Requires-Dist: numpy>=1.25.0
+Requires-Dist: pandas>=2.0.2
+Requires-Dist: matplotlib>=3.7.0
 Requires-Dist: Pathlib2>=2.3.0
 Requires-Dist: scipy>=1.2.0
 Requires-Dist: cmocean>=2.0

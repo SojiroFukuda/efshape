@@ -19,7 +19,7 @@ version = next((line.split('=')[1].strip().replace("'", '')
                 for line in open(os.path.join(here,
                                             'efshape',
                                             '__init__.py'))
-                if line.startswith('__version__ = ')),'1.2.1')
+                if line.startswith('__version__ = ')),'1.2.2')
 
 
 setup(
@@ -35,9 +35,9 @@ setup(
     packages=find_packages(),
     install_requires=[
         "PyQt6 >= 6.4.2",
-        "numpy >= 1.16.0",
-        "pandas >= 0.24.0",
-        "matplotlib >= 3.0.0",
+        "numpy >= 1.25.0",
+        "pandas >= 2.0.2",
+        "matplotlib >= 3.7.0",
         "Pathlib2 >= 2.3.0",
         "scipy >= 1.2.0",
         "cmocean >= 2.0",
