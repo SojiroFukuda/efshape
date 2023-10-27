@@ -1,0 +1,2 @@
+[console_scripts]
+efshape = sviewgui.sview.command:buildGUI
